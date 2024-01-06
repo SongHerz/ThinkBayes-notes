@@ -1,0 +1,3 @@
+[submodule "ThinkBayes"]
+	path = ThinkBayes
+	url = git@github.com:SongHerz/ThinkBayes.git
