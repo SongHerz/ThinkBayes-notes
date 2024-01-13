@@ -52,9 +52,12 @@ def main():
     print()
     print('## Better Implementation')
     print()
+    # cc is short for 'cookie count'
+    bowl1_cc = 30 + 10
+    bowl2_cc = 20 + 20
     hypos = [
-        bslv.Hypo(name='Bowl1', dlls=[('vanilla', 30), ('chocolate', 10)]),
-        bslv.Hypo(name='Bowl2', dlls=[('vanilla', 20), ('chocolate', 20)]),
+        bslv.Hypo(name='Bowl1', dlls=[('vanilla', 30 / bowl1_cc), ('chocolate', 10 / bowl1_cc)]),
+        bslv.Hypo(name='Bowl2', dlls=[('vanilla', 20 / bowl2_cc), ('chocolate', 20 / bowl2_cc)]),
     ]
     pmf = bslv.solve(hypos, 'vanilla')
     pmf.Print()

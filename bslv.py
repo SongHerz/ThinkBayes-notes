@@ -9,15 +9,20 @@ class Hypo:
     '''Hyposis and data likelihoods under this hyposis'''
 
     @staticmethod
-    def _normalize_dlls(dlls: Iterable[tuple[str, float]]) -> dict[str, float]:
+    def _sanity_dlls(dlls: Iterable[tuple[str, float]]) -> dict[str, float]:
         '''
-        :return: normalized data distribution
+        :return: sanity check data distribution.
         '''
-        s = sum(ll for _, ll in dlls)
+        delta = 0.0001
         dll = {}
+        s = 0
         for data, ll in dlls:
             assert data not in dll, 'duplicate data not allowed'
-            dll[data] = ll / s
+            assert ll >= 0, 'a likelihood must be non-negative'
+            s += ll
+            dll[data] = ll
+
+        assert (1.0 + delta) - s >= 0, 'sum of likelihoods must be <= 1.0'
         return dll
 
     def __init__(self, name: str, dlls: Iterable[tuple[str, float]]):
@@ -26,7 +31,7 @@ class Hypo:
         :param dlls: likelihoods of data in pairs of (data, likelihood)
         '''
         self.name = name
-        self.dll = self._normalize_dlls(dlls)
+        self.dll = self._sanity_dlls(dlls)
 
     def all_data(self) -> Iterable[str]:
         ''':return: all data without its probabilites'''
