@@ -30,6 +30,9 @@ def bslv_solve():
 
 class Monty(Suite):
     '''Monty Hall Solver'''
+    def __init__(self):
+        super().__init__(['HA', 'HB', 'HC'])
+
     def Likelihood(self, data: Any, hypo: Any) -> float:
         assert data == 'data'
         if hypo == 'HA':
@@ -43,7 +46,7 @@ class Monty(Suite):
 
 def suite_solve():
     """Solve Monty Hall"""
-    s = Monty(['HA', 'HB', 'HC'])
+    s = Monty()
     s.Update('data')
     s.Print()
 
