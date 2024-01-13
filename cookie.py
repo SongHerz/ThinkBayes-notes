@@ -7,18 +7,26 @@ from thinkbayes import Pmf
 
 class Hypo:
     '''Hyposis and data likelihoods under this hyposis'''
+
+    @staticmethod
+    def _normalize_dlls(dlls: Iterable[tuple[str, float]]) -> dict[str, float]:
+        '''
+        :return: normalized data distribution
+        '''
+        s = sum(ll for _, ll in dlls)
+        dll = {}
+        for data, ll in dlls:
+            assert data not in dll, 'duplicate data not allowed'
+            dll[data] = ll / s
+        return dll
+
     def __init__(self, name: str, dlls: Iterable[tuple[str, float]]):
         '''
         :param name: name of this hypothesis
         :param dlls: likelihoods of data in pairs of (data, likelihood)
         '''
         self.name = name
-        # Normalize data distribution
-        s = sum(ll for _, ll in dlls)
-        self.dll = {}
-        for data, ll in dlls:
-            assert data not in self.dll, 'duplicate data not allowed'
-            self.dll[data] = ll / s
+        self.dll = self._normalize_dlls(dlls)
 
     def all_data(self) -> Iterable[str]:
         ''':return: all data without its probabilites'''
