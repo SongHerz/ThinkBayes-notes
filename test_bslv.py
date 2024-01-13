@@ -52,3 +52,46 @@ def test_monty_hall():
     data = 'data'
     exps = [('HA', 0.33333), ('HB', 0), ('HC', 0.66666)]
     _test_solve(hypos=hypos, data=data, exps=exps)
+
+def test_mm():
+    """test with MM problem"""
+    # # Scenario:
+    # 2 bags of MM
+    # - one from 1994
+    # - the other from 1996
+    dist_b4_1995 = {
+        'brown': 30 / 100,
+        'yellow': 20 / 100,
+        'red': 20 / 100,
+        'green': 10 / 100,
+        'orange': 10 / 100,
+        'tan': 10 / 100,
+    }
+    dist_since_1995 = {
+        'blue': 24 / 100,
+        'green': 20 / 100,
+        'orange': 16 / 100,
+        'yellow': 14 / 100,
+        'red': 13 / 100,
+        'brown': 13 / 100,
+    }
+
+    dist_1994 = dist_b4_1995
+    dist_1996 = dist_since_1995
+
+    def get_dist(tab: dict[str, float], color: str) -> float:
+        return tab.get(color, 0.0)
+
+    # Data: pick 2 MMs from each bag.
+    #       - the 1st MM is yellow.
+    #       - the 2nd MM is green
+    hypos = [
+        # the 1st bag 1994, the 2nd bag 1996
+        Hypo(name='H1', dlls=[('data', get_dist(dist_1994, 'yellow') * get_dist(dist_1996, 'green'))]),
+        # the 1st bag 1996, the 2nd bag 1994
+        Hypo(name='H2', dlls=[('data', get_dist(dist_1996, 'yellow') * get_dist(dist_1994, 'green'))]),
+    ]
+    # Get P(H1|D)
+    data = 'data'
+    exps = [('H1', 200 / (200 + 70)), ('H2', 70 / (200 + 70))]
+    _test_solve(hypos=hypos, data=data, exps=exps)
