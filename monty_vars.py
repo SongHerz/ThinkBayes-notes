@@ -9,7 +9,7 @@ Scenario:
 Data: Monty opens door B, and no car behind door B.
 """
 
-from typing import Any
+from typing import Any, Iterable
 from thinkbayes import Suite
 import bslv
 
@@ -44,9 +44,36 @@ class Monty(Suite):
             return 1
 
 
+class HSuite(Suite):
+    """Suite initialized with hypos"""
+    def __init__(self, hypos: Iterable[bslv.Hypo]):
+        hs = list(hypos)
+        hs = {h.name: h for h in hypos}
+        super().__init__(hs.keys())
+        self.hs = hs
+
+    def Likelihood(self, data: str, hypo: str) -> float:
+        return self.hs[hypo].likelihood(data)
+
+
 def suite_solve():
     """Solve Monty Hall"""
     s = Monty()
+    s.Update('data')
+    s.Print()
+
+
+def suite_hypo_solve():
+    """Solve Monty Hall with hypo"""
+    hypos = [
+        # The car behind door A
+        bslv.Hypo(name='HA', dlls=[('data', 1 / 2)]),
+        # The car behind door B
+        bslv.Hypo(name='HB', dlls=[('data', 0)]),
+        # The car behind door C
+        bslv.Hypo(name='HC', dlls=[('data', 1)])
+    ]
+    s = HSuite(hypos)
     s.Update('data')
     s.Print()
 
@@ -57,3 +84,7 @@ bslv_solve()
 print()
 print('Solve with Suite:')
 suite_solve()
+
+print()
+print('Solve with Suite + Hypo:')
+suite_hypo_solve()
