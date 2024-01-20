@@ -21,10 +21,10 @@ class Train(Suite):
 
 
 def estimate(hypo_dists: Sequence[tuple[int, float]],
-             obs: Iterable[int]) -> tuple[Suite, list[float]]:
+             dataset: Iterable[int]) -> tuple[Suite, list[float]]:
     """Estimate total train number based on observations
     :param hypos: hypotheses in sequence of (number of train, probability)
-    :param obs: observations of train ids
+    :param dataset: observations of train ids
     :param verbose: show probabilities of each possible train number in txt
     :param plot: plot updated hypotheses distribution
     :return: (Final Suite, estimations) that can be used for plotting
@@ -37,8 +37,8 @@ def estimate(hypo_dists: Sequence[tuple[int, float]],
 
     # Estimation sequences based on given observations
     ests = []
-    for ob in obs:
-        suite.Update(ob)
+    for d in dataset:
+        suite.Update(d)
         ests.append(suite.Mean())
 
     return suite, ests
@@ -61,10 +61,10 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
 
 
 LIMIT = 1000
-obs = [60]
-suite, ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), obs=obs)
+dataset = [60]
+suite, ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), dataset=dataset)
 print()
-print(f'Limit: {LIMIT}, observations: {obs}')
+print(f'Limit: {LIMIT}, observations: {dataset}')
 print('Detailed distribution:')
 suite.Print()
 print(f'Estimations: {ests}, final estimation: {ests[-1]}')
@@ -82,15 +82,15 @@ print(' Even Distribution Hypotheses')
 print('##############################')
 
 limits = [500, 1000, 2000]
-obs = [60, 30, 90]
+dataset = [60, 30, 90]
 
 thinkplot.Clf()
 thinkplot.PrePlot(len(limits))
 for limit in limits:
-    suite, ests = estimate(hypo_dists=get_even_hypo_dists(limit), obs=obs)
+    suite, ests = estimate(hypo_dists=get_even_hypo_dists(limit), dataset=dataset)
     suite.name = str(limit) # Set suite name for plotting legends
     thinkplot.Pmf(suite)
-    print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
+    print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
 thinkplot.Show(title='Even distribution hypotheses',
                xlabel='Number of trains',
@@ -104,15 +104,15 @@ print(' Power-law Distribution Hypotheses')
 print('###################################')
 
 limits = [500, 1000, 2000]
-obs = [60, 30, 90]
+dataset = [60, 30, 90]
 
 thinkplot.Clf()
 thinkplot.PrePlot(len(limits))
 for limit in limits:
-    suite, ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), obs=obs)
+    suite, ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), dataset=dataset)
     suite.name = str(limit)
     thinkplot.Pmf(suite)
-    print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
+    print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
 thinkplot.Show(title='Power-law distribution hypotheses',
                xlabel='Number of trains',
@@ -126,20 +126,20 @@ print(' Even vs Power-law Distribution Hypotheses')
 print('##########################################')
 
 limit = 1000
-obs = [60, 30, 90]
+dataset = [60, 30, 90]
 even_hypo_dists = get_even_hypo_dists(limit)
 power_law_dists = get_power_law_hypo_dists(limit)
 thinkplot.Clf()
 thinkplot.PrePlot(2)
-even_suite, even_ests = estimate(hypo_dists=even_hypo_dists, obs=obs)
+even_suite, even_ests = estimate(hypo_dists=even_hypo_dists, dataset=dataset)
 even_suite.name = "Even"
 thinkplot.Pmf(even_suite)
-print(f'Limit: {limit}, observations: {obs}, estimations: {even_ests}, final estimation: {even_ests[-1]}')
+print(f'Limit: {limit}, observations: {dataset}, estimations: {even_ests}, final estimation: {even_ests[-1]}')
 
-power_law_suite, power_law_ests = estimate(hypo_dists=power_law_dists, obs=obs)
+power_law_suite, power_law_ests = estimate(hypo_dists=power_law_dists, dataset=dataset)
 power_law_suite.name = "Power-law"
 thinkplot.Pmf(power_law_suite)
-print(f'Limit: {limit}, observations: {obs}, estimations: {power_law_ests}, final estimation: {power_law_ests[-1]}')
+print(f'Limit: {limit}, observations: {dataset}, estimations: {power_law_ests}, final estimation: {power_law_ests[-1]}')
 
 thinkplot.Show(title='Even vs Power-law distribution hypotheses',
                xlabel='Number of trains',
