@@ -1,0 +1,1 @@
+ThinkBayes/code/thinkplot.py
