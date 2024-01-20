@@ -26,4 +26,3 @@ for i, r in enumerate(rolls, start=1):
     print(f'  number: {r}')
     print('  Updated posterier')
     dice.Print()
-
