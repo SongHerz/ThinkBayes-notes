@@ -20,17 +20,13 @@ class Train(Suite):
         return 1.0 / hypo
 
 
-def estimate(
-    hypo_dists: Sequence[tuple[int, float]],
-    obs: Iterable[int],
-    verbose: False,
-    plot: False,
-) -> float:
+def estimate(hypo_dists: Sequence[tuple[int, float]], obs: Iterable[int]) -> tuple[Suite, list[float]]:
     """Estimate total train number based on observations
     :param hypos: hypotheses in sequence of (number of train, probability)
     :param obs: observations of train ids
     :param verbose: show probabilities of each possible train number in txt
     :param plot: plot updated hypotheses distribution
+    :return: (Final Suite, estimations) that can be used for plotting
     """
     suite = Train()
     for h, p in hypo_dists:
@@ -44,17 +40,7 @@ def estimate(
         suite.Update(ob)
         ests.append(suite.Mean())
 
-    if verbose:
-        print()
-        print("Detailed distribution:")
-        suite.Print()
-
-    if plot:
-        thinkplot.PrePlot(1)
-        thinkplot.Pmf(suite)
-        thinkplot.Show(xlabel="Number of trains", ylabel="Probability")
-
-    return ests
+    return suite, ests
 
 
 def get_even_hypo_dists(limit: int) -> list[tuple[int, float]]:
@@ -75,8 +61,17 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
 
 LIMIT = 1000
 obs = [60]
-ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), obs=obs, verbose=True, plot=True)
-print(f'Limit: {LIMIT}, observations: {obs}, estimation: {ests[-1]}')
+suite, ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), obs=obs)
+print()
+print(f'Limit: {LIMIT}, observations: {obs}')
+print('Detailed distribution:')
+suite.Print()
+print(f'Estimations: {ests}, final estimation: {ests[-1]}')
+
+thinkplot.Clf()
+thinkplot.PrePlot(1)
+thinkplot.Pmf(suite)
+thinkplot.Show(xlabel="Number of trains", ylabel="Probability")
 
 
 print()
@@ -86,7 +81,7 @@ print(' Even Distribution Hypotheses')
 print('##############################')
 obs = [60, 30, 90]
 for limit in [500, 1000, 2000]:
-    ests = estimate(hypo_dists=get_even_hypo_dists(limit), obs=obs, verbose=False, plot=False)
+    _, ests = estimate(hypo_dists=get_even_hypo_dists(limit), obs=obs)
     print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
 
 
@@ -97,5 +92,5 @@ print(' Power-law Distribution Hypotheses')
 print('###################################')
 obs = [60, 30, 90]
 for limit in [500, 1000, 2000]:
-    ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), obs=obs, verbose=False, plot=False)
+    _, ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), obs=obs)
     print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
