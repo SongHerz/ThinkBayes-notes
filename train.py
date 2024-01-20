@@ -60,7 +60,17 @@ def estimate(
 def get_even_hypo_dists(limit: int) -> list[tuple[int, float]]:
     """Get even distributed hypotheses"""
     assert limit >= 1
-    return [(h, 1 / limit) for h in range(1, limit + 1)]
+    hypo_dists = [(h, 1) for h in range(1, limit + 1)]
+    mu = sum(v for _, v in hypo_dists)
+    return [(h, v / mu) for h, v in hypo_dists]
+
+
+def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, float]]:
+    """Get power-law distributed hypotheses"""
+    assert limit >= 1
+    hypo_dists = [(h, h ** (-alpha)) for h in range(1, limit + 1)]
+    mu = sum(v for _, v in hypo_dists)
+    return [(h, v / mu) for h, v in hypo_dists]
 
 
 LIMIT = 1000
@@ -69,8 +79,23 @@ ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), obs=obs, verbose=True, pl
 print(f'Limit: {LIMIT}, observations: {obs}, estimation: {ests[-1]}')
 
 
-# Show values of various estimations
+print()
+print()
+print('##############################')
+print(' Even Distribution Hypotheses')
+print('##############################')
 obs = [60, 30, 90]
 for limit in [500, 1000, 2000]:
     ests = estimate(hypo_dists=get_even_hypo_dists(limit), obs=obs, verbose=False, plot=False)
+    print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
+
+
+print()
+print()
+print('###################################')
+print(' Power-law Distribution Hypotheses')
+print('###################################')
+obs = [60, 30, 90]
+for limit in [500, 1000, 2000]:
+    ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), obs=obs, verbose=False, plot=False)
     print(f'Limit: {limit}, observations: {obs}, estimations: {ests}, final estimation: {ests[-1]}')
