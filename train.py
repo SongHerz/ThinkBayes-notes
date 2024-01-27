@@ -4,7 +4,8 @@ Train number estimation
 """
 
 from typing import Iterable, Sequence
-from thinkbayes import Suite, Percentile
+
+from thinkbayes import Suite
 import thinkplot
 
 
@@ -72,7 +73,11 @@ print(f'Estimations: {ests}, final estimation: {ests[-1]}')
 thinkplot.Clf()
 thinkplot.PrePlot(1)
 thinkplot.Pmf(suite)
-thinkplot.Show(xlabel="Number of trains", ylabel="Probability")
+thinkplot.Show(title='\n'.join(['Even distribution hypotheses',
+                                f'Distribution limits: {LIMIT}',
+                                f'Dataset: {dataset}']),
+               xlabel="Number of trains",
+               ylabel="Probability")
 
 
 print()
@@ -92,7 +97,9 @@ for limit in limits:
     thinkplot.Pmf(suite)
     print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
-thinkplot.Show(title='Even distribution hypotheses',
+thinkplot.Show(title='\n'.join(['Even distribution hypotheses',
+                                f'Distribution limits: {limits}',
+                                f'Dataset: {dataset}']),
                xlabel='Number of trains',
                ylabel='Probability')
 
@@ -114,7 +121,9 @@ for limit in limits:
     thinkplot.Pmf(suite)
     print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
-thinkplot.Show(title='Power-law distribution hypotheses',
+thinkplot.Show(title='\n'.join(['Power-law distribution hypotheses',
+                                f'Distribution limits: {limits}',
+                                f'Dataset: {dataset}']),
                xlabel='Number of trains',
                ylabel='Probability')
 
@@ -158,6 +167,8 @@ print('Power Law Distribution Hypotheses Confidence Interval:')
 print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
 
 
-thinkplot.Show(title='Even vs Power-law distribution hypotheses',
+thinkplot.Show(title='\n'.join(['Even vs Power-law distribution hypotheses',
+                                f'Distribution limits: {limit}',
+                                f'Dataset: {dataset}']),
                xlabel='Number of trains',
                ylabel='Probability')
