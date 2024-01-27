@@ -4,7 +4,7 @@ Train number estimation
 """
 
 from typing import Iterable, Sequence
-from thinkbayes import Suite
+from thinkbayes import Suite, Percentile
 import thinkplot
 
 
@@ -140,6 +140,14 @@ power_law_suite, power_law_ests = estimate(hypo_dists=power_law_dists, dataset=d
 power_law_suite.name = "Power-law"
 thinkplot.Pmf(power_law_suite)
 print(f'Limit: {limit}, observations: {dataset}, estimations: {power_law_ests}, final estimation: {power_law_ests[-1]}')
+
+interval_percent_start, interval_percent_end = 5, 95
+interval_start, interval_end = (
+    Percentile(power_law_suite, interval_percent_start),
+    Percentile(power_law_suite, interval_percent_end))
+print('Confidence Interval:')
+print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
+
 
 thinkplot.Show(title='Even vs Power-law distribution hypotheses',
                xlabel='Number of trains',
