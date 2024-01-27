@@ -79,14 +79,15 @@ class Estimation:
     ci_end: float
 
 
-def get_ests(limits: Sequence[int],
-             dataset: Sequence[int],
-             hypo_dists_func: Callable[[int], list[tuple[int, float]]]) -> list[Estimation]:
+def get_ests(suite_constr: Callable[[], Suite],
+             hypo_dists_func: Callable[[int], list[tuple[int, float]]],
+             limits: Sequence[int],
+             dataset: Sequence[int]) -> list[Estimation]:
     """Generate estimations"""
     ret = []
     for limit in limits:
         hypo_dists = hypo_dists_func(limit)
-        suite, ests = estimate(Train, hypo_dists=hypo_dists, dataset=dataset)
+        suite, ests = estimate(suite_constr, hypo_dists=hypo_dists, dataset=dataset)
         suite.name = str(limit) # Set suite name for plotting legends
 
         cdf = suite.MakeCdf()
@@ -123,13 +124,14 @@ def plot_ests(ests: list[Estimation], title: str):
                    ylabel='Probability')
 
 
-def plot_alot():
+def plot_alot(suite_constr: Callable[[], Suite]):
     """Plot with various plots"""
     limits = [1000]
     dataset = [60]
-    ests = get_ests(limits=limits,
-                    dataset=dataset,
-                    hypo_dists_func=get_even_hypo_dists)
+    ests = get_ests(suite_constr=suite_constr,
+                    hypo_dists_func=get_even_hypo_dists,
+                    limits=limits,
+                    dataset=dataset)
     plot_ests(ests=ests,
               title='\n'.join(['Even distribution hypotheses',
                                f'Distribution limits: {limits}',
@@ -144,9 +146,10 @@ def plot_alot():
     print('##############################')
     limits = [500, 1000, 2000]
     dataset = [60, 30, 90]
-    ests = get_ests(limits=limits,
-                    dataset=dataset,
-                    hypo_dists_func=get_even_hypo_dists)
+    ests = get_ests(suite_constr=suite_constr,
+                    hypo_dists_func=get_even_hypo_dists,
+                    limits=limits,
+                    dataset=dataset)
     plot_ests(ests=ests,
               title='\n'.join(['Even distribution hypotheses',
                                f'Distribution limits: {limits}',
@@ -161,9 +164,10 @@ def plot_alot():
     print('###################################')
     limits = [500, 1000, 2000]
     dataset = [60, 30, 90]
-    ests = get_ests(limits=limits,
-                    dataset=dataset,
-                    hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
+    ests = get_ests(suite_constr=suite_constr,
+                    hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0),
+                    limits=limits,
+                    dataset=dataset)
     plot_ests(ests=ests,
               title='\n'.join(['Power-law distribution hypotheses',
                                f'Distribution limits: {limits}',
@@ -179,16 +183,18 @@ def plot_alot():
 
     limit = 1000
     dataset = [60, 30, 90]
-    even_ests = get_ests(limits=[limit],
-                         dataset=dataset,
-                         hypo_dists_func=get_even_hypo_dists)
+    even_ests = get_ests(suite_constr=suite_constr,
+                         hypo_dists_func=get_even_hypo_dists,
+                         limits=[limit],
+                         dataset=dataset)
     assert len(even_ests) == 1
     # Overwrite name for plotting legends
     even_ests[0].suite.name = 'Even'
 
-    power_law_ests = get_ests(limits=[limit],
-                              dataset=dataset,
-                              hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
+    power_law_ests = get_ests(suite_constr=suite_constr,
+                              hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0),
+                              limits=[limit],
+                              dataset=dataset)
     assert len(power_law_ests) == 1
     power_law_ests[0].suite.name = 'Power-law'
 
@@ -202,4 +208,4 @@ def plot_alot():
                                f'Dataset: {dataset}',
                                ]))
 
-plot_alot()
+plot_alot(Train)
