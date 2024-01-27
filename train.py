@@ -135,6 +135,12 @@ even_suite, even_ests = estimate(hypo_dists=even_hypo_dists, dataset=dataset)
 even_suite.name = "Even"
 thinkplot.Pmf(even_suite)
 print(f'Limit: {limit}, observations: {dataset}, estimations: {even_ests}, final estimation: {even_ests[-1]}')
+interval_percent_start, interval_percent_end = 5, 95
+interval_start, interval_end = (
+    Percentile(even_suite, interval_percent_start),
+    Percentile(even_suite, interval_percent_end))
+print('Even Distribution Hypotheses Confidence Interval:')
+print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
 
 power_law_suite, power_law_ests = estimate(hypo_dists=power_law_dists, dataset=dataset)
 power_law_suite.name = "Power-law"
@@ -145,7 +151,7 @@ interval_percent_start, interval_percent_end = 5, 95
 interval_start, interval_end = (
     Percentile(power_law_suite, interval_percent_start),
     Percentile(power_law_suite, interval_percent_end))
-print('Confidence Interval:')
+print('Power Law Distribution Hypotheses Confidence Interval:')
 print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
 
 
