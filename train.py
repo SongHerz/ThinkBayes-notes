@@ -65,6 +65,7 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
 
 @dataclass(frozen=True)
 class Estimation:
+    """Result of an estimation"""
     limit: int
     dataset: Sequence[int]
     suite: Suite
@@ -110,9 +111,11 @@ def plot_ests(ests: list[Estimation], title: str):
     for est in ests:
         limits.append(est.limit)
         thinkplot.Pmf(est.suite)
-        print(f'Limit: {est.limit}, dataset: {est.dataset}, estimations: {est.ests}, final estimation: {est.ests[-1]}')
+        print(f'Limit: {est.limit}, dataset: {est.dataset}, '
+              f'estimations: {est.ests}, final estimation: {est.ests[-1]}')
 
-        ci_str = f'Confidence interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: {est.ci_start} ~ {est.ci_end}'
+        ci_str = (f'Confidence interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: '
+                  f'{est.ci_start} ~ {est.ci_end}')
         print(ci_str)
 
     thinkplot.Show(title=title,
@@ -120,79 +123,83 @@ def plot_ests(ests: list[Estimation], title: str):
                    ylabel='Probability')
 
 
-limits = [1000]
-dataset = [60]
-ests = get_ests(limits=limits,
-                dataset=dataset,
-                hypo_dists_func=get_even_hypo_dists)
-plot_ests(ests=ests,
-          title='\n'.join(['Even distribution hypotheses',
-                           f'Distribution limits: {limits}',
-                           f'Dataset: {dataset}',
-                           ]))
+def plot_alot():
+    """Plot with various plots"""
+    limits = [1000]
+    dataset = [60]
+    ests = get_ests(limits=limits,
+                    dataset=dataset,
+                    hypo_dists_func=get_even_hypo_dists)
+    plot_ests(ests=ests,
+              title='\n'.join(['Even distribution hypotheses',
+                               f'Distribution limits: {limits}',
+                               f'Dataset: {dataset}',
+                               ]))
 
 
-print()
-print()
-print('##############################')
-print(' Even Distribution Hypotheses')
-print('##############################')
-limits = [500, 1000, 2000]
-dataset = [60, 30, 90]
-ests = get_ests(limits=limits,
-                dataset=dataset,
-                hypo_dists_func=get_even_hypo_dists)
-plot_ests(ests=ests,
-          title='\n'.join(['Even distribution hypotheses',
-                           f'Distribution limits: {limits}',
-                           f'Dataset: {dataset}',
-                           ]))
+    print()
+    print()
+    print('##############################')
+    print(' Even Distribution Hypotheses')
+    print('##############################')
+    limits = [500, 1000, 2000]
+    dataset = [60, 30, 90]
+    ests = get_ests(limits=limits,
+                    dataset=dataset,
+                    hypo_dists_func=get_even_hypo_dists)
+    plot_ests(ests=ests,
+              title='\n'.join(['Even distribution hypotheses',
+                               f'Distribution limits: {limits}',
+                               f'Dataset: {dataset}',
+                               ]))
 
 
-print()
-print()
-print('###################################')
-print(' Power-law Distribution Hypotheses')
-print('###################################')
-limits = [500, 1000, 2000]
-dataset = [60, 30, 90]
-ests = get_ests(limits=limits,
-                dataset=dataset,
-                hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
-plot_ests(ests=ests,
-          title='\n'.join(['Power-law distribution hypotheses',
-                           f'Distribution limits: {limits}',
-                           f'Dataset: {dataset}',
-                           ]))
+    print()
+    print()
+    print('###################################')
+    print(' Power-law Distribution Hypotheses')
+    print('###################################')
+    limits = [500, 1000, 2000]
+    dataset = [60, 30, 90]
+    ests = get_ests(limits=limits,
+                    dataset=dataset,
+                    hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
+    plot_ests(ests=ests,
+              title='\n'.join(['Power-law distribution hypotheses',
+                               f'Distribution limits: {limits}',
+                               f'Dataset: {dataset}',
+                               ]))
 
 
-print()
-print()
-print('##########################################')
-print(' Even vs Power-law Distribution Hypotheses')
-print('##########################################')
+    print()
+    print()
+    print('##########################################')
+    print(' Even vs Power-law Distribution Hypotheses')
+    print('##########################################')
 
-limit = 1000
-dataset = [60, 30, 90]
-even_ests = get_ests(limits=[limit],
-                     dataset=dataset,
-                     hypo_dists_func=get_even_hypo_dists)
-assert len(even_ests) == 1
-# Overwrite name for plotting legends
-even_ests[0].suite.name = 'Even'
+    limit = 1000
+    dataset = [60, 30, 90]
+    even_ests = get_ests(limits=[limit],
+                         dataset=dataset,
+                         hypo_dists_func=get_even_hypo_dists)
+    assert len(even_ests) == 1
+    # Overwrite name for plotting legends
+    even_ests[0].suite.name = 'Even'
 
-power_law_ests = get_ests(limits=[limit],
-                          dataset=dataset,
-                          hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
-assert len(power_law_ests) == 1
-power_law_ests[0].suite.name = 'Power-law'
+    power_law_ests = get_ests(limits=[limit],
+                              dataset=dataset,
+                              hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
+    assert len(power_law_ests) == 1
+    power_law_ests[0].suite.name = 'Power-law'
 
-ests = []
-ests.extend(even_ests)
-ests.extend(power_law_ests)
+    ests = []
+    ests.extend(even_ests)
+    ests.extend(power_law_ests)
 
-plot_ests(ests=ests, 
-          title='\n'.join(['Even vs Power-law distribution hypotheses',
-                           f'Distribution limits: {[limit]}',
-                           f'Dataset: {dataset}',
-                           ]))
+    plot_ests(ests=ests,
+              title='\n'.join(['Even vs Power-law distribution hypotheses',
+                               f'Distribution limits: {[limit]}',
+                               f'Dataset: {dataset}',
+                               ]))
+
+plot_alot()
