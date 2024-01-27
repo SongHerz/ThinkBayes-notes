@@ -75,9 +75,17 @@ def plot_est(limits: Sequence[int],
         thinkplot.Pmf(suite)
         print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
+        cdf = suite.MakeCdf()
+        ci_start_pct, ci_end_pct = 5, 95
+        ci_start, ci_end = cdf.Percentile(ci_start_pct), cdf.Percentile(ci_end_pct)
+        ci_str = f'Confidence interval {ci_start_pct}% ~ {ci_end_pct}%: {ci_start} ~ {ci_end}'
+        print(ci_str)
+
     thinkplot.Show(title='\n'.join([f'{title}',
                                     f'Distribution limits: {limits}',
-                                    f'Dataset: {dataset}']),
+                                    f'Dataset: {dataset}',
+                                    ci_str,
+                                    ]),
                    xlabel='Number of trains',
                    ylabel='Probability')
 
