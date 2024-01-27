@@ -86,10 +86,10 @@ class Estimation:
     suite: Suite
     # Estimations on each updates
     ests: list[float]
-    # Confidence interval in percents (start, end)
+    # Credible interval in percents (start, end)
     ci_start_pct: float
     ci_end_pct: float
-    # Confidence interval in estimated numbers (start, end)
+    # Credible interval in estimated numbers (start, end)
     ci_start: float
     ci_end: float
 
@@ -130,7 +130,7 @@ def plot_ests(ests: list[Estimation], title: str):
         print(f'Limit: {est.limit}, dataset: {est.dataset}, '
               f'estimations: {est.ests}, final estimation: {est.ests[-1]}')
 
-        ci_str = (f'Confidence interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: '
+        ci_str = (f'Credible interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: '
                   f'{est.ci_start} ~ {est.ci_end}')
         print(ci_str)
 
