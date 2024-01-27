@@ -102,15 +102,14 @@ def get_ests(limits: Sequence[int],
     return ret
 
 
-def plot_est(ests: list[Estimation], title: str):
+def plot_ests(ests: list[Estimation], title: str):
     """Plot estimation results"""
     thinkplot.Clf()
     thinkplot.PrePlot(len(ests))
     limits = []
     for est in ests:
         limits.append(est.limit)
-        # Set label name for plotting legends
-        thinkplot.Pmf(est.suite, label=str(est.limit))
+        thinkplot.Pmf(est.suite)
         print(f'Limit: {est.limit}, dataset: {est.dataset}, estimations: {est.ests}, final estimation: {est.ests[-1]}')
 
         ci_str = f'Confidence interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: {est.ci_start} ~ {est.ci_end}'
@@ -124,9 +123,9 @@ def plot_est(ests: list[Estimation], title: str):
                    ylabel='Probability')
 
 
-plot_est(ests=get_ests(limits=[1000],
-                       dataset=[60],
-                       hypo_dists_func=get_even_hypo_dists),
+plot_ests(ests=get_ests(limits=[1000],
+                        dataset=[60],
+                        hypo_dists_func=get_even_hypo_dists),
           title='Even distribution hypotheses')
 
 
@@ -135,9 +134,9 @@ print()
 print('##############################')
 print(' Even Distribution Hypotheses')
 print('##############################')
-plot_est(ests=get_ests(limits=[500, 1000, 2000],
-                       dataset=[60, 30, 90],
-                       hypo_dists_func=get_even_hypo_dists),
+plot_ests(ests=get_ests(limits=[500, 1000, 2000],
+                        dataset=[60, 30, 90],
+                        hypo_dists_func=get_even_hypo_dists),
          title='Even distribution hypotheses')
 
 
@@ -146,9 +145,9 @@ print()
 print('###################################')
 print(' Power-law Distribution Hypotheses')
 print('###################################')
-plot_est(ests=get_ests(limits=[500, 1000, 2000],
-                       dataset=[60, 30, 90],
-                       hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0)),
+plot_ests(ests=get_ests(limits=[500, 1000, 2000],
+                        dataset=[60, 30, 90],
+                        hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0)),
         title='Power-law distribution hypotheses')
 
 
@@ -160,39 +159,21 @@ print('##########################################')
 
 limit = 1000
 dataset = [60, 30, 90]
-even_hypo_dists = get_even_hypo_dists(limit)
-power_law_dists = get_power_law_hypo_dists(limit)
-thinkplot.Clf()
-thinkplot.PrePlot(2)
-even_suite, even_ests = estimate(Train, hypo_dists=even_hypo_dists, dataset=dataset)
-even_suite.name = "Even"
-thinkplot.Pmf(even_suite)
-print(f'Limit: {limit}, observations: {dataset}, estimations: {even_ests}, final estimation: {even_ests[-1]}')
+even_ests = get_ests(limits=[limit],
+                     dataset=dataset,
+                     hypo_dists_func=get_even_hypo_dists)
+assert len(even_ests) == 1
+# Overwrite name for plotting legends
+even_ests[0].suite.name = 'Even'
 
-cdf = even_suite.MakeCdf()
-interval_percent_start, interval_percent_end = 5, 95
-interval_start, interval_end = (
-    cdf.Percentile(interval_percent_start),
-    cdf.Percentile(interval_percent_end))
-print('Even Distribution Hypotheses Confidence Interval:')
-print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
+power_law_ests = get_ests(limits=[limit],
+                          dataset=dataset,
+                          hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0))
+assert len(power_law_ests) == 1
+power_law_ests[0].suite.name = 'Power-law'
 
-power_law_suite, power_law_ests = estimate(Train, hypo_dists=power_law_dists, dataset=dataset)
-power_law_suite.name = "Power-law"
-thinkplot.Pmf(power_law_suite)
-print(f'Limit: {limit}, observations: {dataset}, estimations: {power_law_ests}, final estimation: {power_law_ests[-1]}')
+ests = []
+ests.extend(even_ests)
+ests.extend(power_law_ests)
 
-cdf = power_law_suite.MakeCdf()
-interval_percent_start, interval_percent_end = 5, 95
-interval_start, interval_end = (
-    cdf.Percentile(interval_percent_start),
-    cdf.Percentile(interval_percent_end))
-print('Power Law Distribution Hypotheses Confidence Interval:')
-print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
-
-
-thinkplot.Show(title='\n'.join(['Even vs Power-law distribution hypotheses',
-                                f'Distribution limits: {limit}',
-                                f'Dataset: {dataset}']),
-               xlabel='Number of trains',
-               ylabel='Probability')
+plot_ests(ests=ests, title='Even vs Power-law distribution hypotheses')
