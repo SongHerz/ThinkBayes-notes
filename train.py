@@ -62,47 +62,40 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
     return [(h, v / mu) for h, v in hypo_dists]
 
 
-LIMIT = 1000
-dataset = [60]
-suite, ests = estimate(Train, hypo_dists=get_even_hypo_dists(LIMIT), dataset=dataset)
-print()
-print(f'Limit: {LIMIT}, observations: {dataset}')
-print('Detailed distribution:')
-suite.Print()
-print(f'Estimations: {ests}, final estimation: {ests[-1]}')
+def plot_est(limits: Sequence[int],
+             dataset: Sequence[int],
+             hypo_dists_func: Callable[[int], list[tuple[int, float]]],
+             title: str):
+    thinkplot.Clf()
+    thinkplot.PrePlot(len(limits))
+    for limit in limits:
+        hypo_dists = hypo_dists_func(limit)
+        suite, ests = estimate(Train, hypo_dists=hypo_dists, dataset=dataset)
+        suite.name = str(limit) # Set suite name for plotting legends
+        thinkplot.Pmf(suite)
+        print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
-thinkplot.Clf()
-thinkplot.PrePlot(1)
-thinkplot.Pmf(suite)
-thinkplot.Show(title='\n'.join(['Even distribution hypotheses',
-                                f'Distribution limits: {LIMIT}',
-                                f'Dataset: {dataset}']),
-               xlabel="Number of trains",
-               ylabel="Probability")
+    thinkplot.Show(title='\n'.join([f'{title}',
+                                    f'Distribution limits: {limits}',
+                                    f'Dataset: {dataset}']),
+                   xlabel='Number of trains',
+                   ylabel='Probability')
 
+
+plot_est(limits=[1000],
+         dataset=[60],
+         hypo_dists_func=get_even_hypo_dists,
+         title='Even distribution hypotheses')
 
 print()
 print()
 print('##############################')
 print(' Even Distribution Hypotheses')
 print('##############################')
-
-limits = [500, 1000, 2000]
-dataset = [60, 30, 90]
-
-thinkplot.Clf()
-thinkplot.PrePlot(len(limits))
-for limit in limits:
-    suite, ests = estimate(Train, hypo_dists=get_even_hypo_dists(limit), dataset=dataset)
-    suite.name = str(limit) # Set suite name for plotting legends
-    thinkplot.Pmf(suite)
-    print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
-
-thinkplot.Show(title='\n'.join(['Even distribution hypotheses',
-                                f'Distribution limits: {limits}',
-                                f'Dataset: {dataset}']),
-               xlabel='Number of trains',
-               ylabel='Probability')
+plot_est(limits=[500, 1000, 2000],
+         dataset=[60, 30, 90],
+         hypo_dists_func=get_even_hypo_dists,
+         title='Even distribution hypotheses')
 
 
 print()
@@ -110,23 +103,10 @@ print()
 print('###################################')
 print(' Power-law Distribution Hypotheses')
 print('###################################')
-
-limits = [500, 1000, 2000]
-dataset = [60, 30, 90]
-
-thinkplot.Clf()
-thinkplot.PrePlot(len(limits))
-for limit in limits:
-    suite, ests = estimate(Train, hypo_dists=get_power_law_hypo_dists(limit), dataset=dataset)
-    suite.name = str(limit)
-    thinkplot.Pmf(suite)
-    print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
-
-thinkplot.Show(title='\n'.join(['Power-law distribution hypotheses',
-                                f'Distribution limits: {limits}',
-                                f'Dataset: {dataset}']),
-               xlabel='Number of trains',
-               ylabel='Probability')
+plot_est(limits=[500, 1000, 2000],
+         dataset=[60, 30, 90],
+         hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0),
+         title='Power-law distribution hypotheses')
 
 
 print()
