@@ -3,7 +3,7 @@
 Train number estimation
 """
 
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, Callable
 
 from thinkbayes import Suite
 import thinkplot
@@ -21,7 +21,8 @@ class Train(Suite):
         return 1.0 / hypo
 
 
-def estimate(hypo_dists: Sequence[tuple[int, float]],
+def estimate(suite_constr: Callable[[], Suite],
+             hypo_dists: Sequence[tuple[int, float]],
              dataset: Iterable[int]) -> tuple[Suite, list[float]]:
     """Estimate total train number based on observations
     :param hypos: hypotheses in sequence of (number of train, probability)
@@ -30,7 +31,7 @@ def estimate(hypo_dists: Sequence[tuple[int, float]],
     :param plot: plot updated hypotheses distribution
     :return: (Final Suite, estimations) that can be used for plotting
     """
-    suite = Train()
+    suite = suite_constr()
     for h, p in hypo_dists:
         suite.Set(h, p)
 
@@ -63,7 +64,7 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
 
 LIMIT = 1000
 dataset = [60]
-suite, ests = estimate(hypo_dists=get_even_hypo_dists(LIMIT), dataset=dataset)
+suite, ests = estimate(Train, hypo_dists=get_even_hypo_dists(LIMIT), dataset=dataset)
 print()
 print(f'Limit: {LIMIT}, observations: {dataset}')
 print('Detailed distribution:')
@@ -92,7 +93,7 @@ dataset = [60, 30, 90]
 thinkplot.Clf()
 thinkplot.PrePlot(len(limits))
 for limit in limits:
-    suite, ests = estimate(hypo_dists=get_even_hypo_dists(limit), dataset=dataset)
+    suite, ests = estimate(Train, hypo_dists=get_even_hypo_dists(limit), dataset=dataset)
     suite.name = str(limit) # Set suite name for plotting legends
     thinkplot.Pmf(suite)
     print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
@@ -116,7 +117,7 @@ dataset = [60, 30, 90]
 thinkplot.Clf()
 thinkplot.PrePlot(len(limits))
 for limit in limits:
-    suite, ests = estimate(hypo_dists=get_power_law_hypo_dists(limit), dataset=dataset)
+    suite, ests = estimate(Train, hypo_dists=get_power_law_hypo_dists(limit), dataset=dataset)
     suite.name = str(limit)
     thinkplot.Pmf(suite)
     print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
@@ -140,7 +141,7 @@ even_hypo_dists = get_even_hypo_dists(limit)
 power_law_dists = get_power_law_hypo_dists(limit)
 thinkplot.Clf()
 thinkplot.PrePlot(2)
-even_suite, even_ests = estimate(hypo_dists=even_hypo_dists, dataset=dataset)
+even_suite, even_ests = estimate(Train, hypo_dists=even_hypo_dists, dataset=dataset)
 even_suite.name = "Even"
 thinkplot.Pmf(even_suite)
 print(f'Limit: {limit}, observations: {dataset}, estimations: {even_ests}, final estimation: {even_ests[-1]}')
@@ -153,7 +154,7 @@ interval_start, interval_end = (
 print('Even Distribution Hypotheses Confidence Interval:')
 print(f'({interval_percent_start}%, {interval_percent_end}%), {interval_start}, {interval_end}')
 
-power_law_suite, power_law_ests = estimate(hypo_dists=power_law_dists, dataset=dataset)
+power_law_suite, power_law_ests = estimate(Train, hypo_dists=power_law_dists, dataset=dataset)
 power_law_suite.name = "Power-law"
 thinkplot.Pmf(power_law_suite)
 print(f'Limit: {limit}, observations: {dataset}, estimations: {power_law_ests}, final estimation: {power_law_ests[-1]}')
