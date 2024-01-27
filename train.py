@@ -4,6 +4,7 @@ Train number estimation
 """
 
 from typing import Iterable, Sequence, Callable
+from dataclasses import dataclass
 
 from thinkbayes import Suite
 import thinkplot
@@ -62,47 +63,81 @@ def get_power_law_hypo_dists(limit: int, alpha: float = 1.0) -> list[tuple[int, 
     return [(h, v / mu) for h, v in hypo_dists]
 
 
-def plot_est(limits: Sequence[int],
+@dataclass(frozen=True)
+class Estimation:
+    limit: int
+    dataset: Sequence[int]
+    suite: Suite
+    # Estimations on each updates
+    ests: list[float]
+    # Confidence interval in percents (start, end)
+    ci_start_pct: float
+    ci_end_pct: float
+    # Confidence interval in estimated numbers (start, end)
+    ci_start: float
+    ci_end: float
+
+
+def get_ests(limits: Sequence[int],
              dataset: Sequence[int],
-             hypo_dists_func: Callable[[int], list[tuple[int, float]]],
-             title: str):
-    thinkplot.Clf()
-    thinkplot.PrePlot(len(limits))
+             hypo_dists_func: Callable[[int], list[tuple[int, float]]]) -> list[Estimation]:
+    """Generate estimations"""
+    ret = []
     for limit in limits:
         hypo_dists = hypo_dists_func(limit)
         suite, ests = estimate(Train, hypo_dists=hypo_dists, dataset=dataset)
         suite.name = str(limit) # Set suite name for plotting legends
-        thinkplot.Pmf(suite)
-        print(f'Limit: {limit}, observations: {dataset}, estimations: {ests}, final estimation: {ests[-1]}')
 
         cdf = suite.MakeCdf()
         ci_start_pct, ci_end_pct = 5, 95
         ci_start, ci_end = cdf.Percentile(ci_start_pct), cdf.Percentile(ci_end_pct)
-        ci_str = f'Confidence interval {ci_start_pct}% ~ {ci_end_pct}%: {ci_start} ~ {ci_end}'
+        ret.append(Estimation(limit=limit,
+                              dataset=dataset,
+                              suite=suite,
+                              ests=ests,
+                              ci_start_pct=ci_start_pct,
+                              ci_end_pct=ci_end_pct,
+                              ci_start=ci_start,
+                              ci_end=ci_end))
+    return ret
+
+
+def plot_est(ests: list[Estimation], title: str):
+    """Plot estimation results"""
+    thinkplot.Clf()
+    thinkplot.PrePlot(len(ests))
+    limits = []
+    for est in ests:
+        limits.append(est.limit)
+        # Set label name for plotting legends
+        thinkplot.Pmf(est.suite, label=str(est.limit))
+        print(f'Limit: {est.limit}, dataset: {est.dataset}, estimations: {est.ests}, final estimation: {est.ests[-1]}')
+
+        ci_str = f'Confidence interval {est.ci_start_pct}% ~ {est.ci_end_pct}%: {est.ci_start} ~ {est.ci_end}'
         print(ci_str)
 
     thinkplot.Show(title='\n'.join([f'{title}',
                                     f'Distribution limits: {limits}',
-                                    f'Dataset: {dataset}',
                                     ci_str,
                                     ]),
                    xlabel='Number of trains',
                    ylabel='Probability')
 
 
-plot_est(limits=[1000],
-         dataset=[60],
-         hypo_dists_func=get_even_hypo_dists,
-         title='Even distribution hypotheses')
+plot_est(ests=get_ests(limits=[1000],
+                       dataset=[60],
+                       hypo_dists_func=get_even_hypo_dists),
+          title='Even distribution hypotheses')
+
 
 print()
 print()
 print('##############################')
 print(' Even Distribution Hypotheses')
 print('##############################')
-plot_est(limits=[500, 1000, 2000],
-         dataset=[60, 30, 90],
-         hypo_dists_func=get_even_hypo_dists,
+plot_est(ests=get_ests(limits=[500, 1000, 2000],
+                       dataset=[60, 30, 90],
+                       hypo_dists_func=get_even_hypo_dists),
          title='Even distribution hypotheses')
 
 
@@ -111,10 +146,10 @@ print()
 print('###################################')
 print(' Power-law Distribution Hypotheses')
 print('###################################')
-plot_est(limits=[500, 1000, 2000],
-         dataset=[60, 30, 90],
-         hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0),
-         title='Power-law distribution hypotheses')
+plot_est(ests=get_ests(limits=[500, 1000, 2000],
+                       dataset=[60, 30, 90],
+                       hypo_dists_func=lambda x: get_power_law_hypo_dists(x, alpha=1.0)),
+        title='Power-law distribution hypotheses')
 
 
 print()
