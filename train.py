@@ -12,7 +12,7 @@ import thinkplot
 
 class Train(Suite):
     """
-    Even distribution hypothesis .
+    Train likelihood even distribution on given hypothesis .
     """
 
     def Likelihood(self, data: int, hypo: int) -> float:
@@ -20,6 +20,21 @@ class Train(Suite):
             return 0.0
 
         return 1.0 / hypo
+
+
+class Train2(Suite):
+    """
+    When there are multiple companies
+    """
+    def Likelihood(self, data: int, hypo: int) -> float:
+        if hypo < data:
+            return 0.0
+
+        # Assume train ids also in power-law distribution.
+        assert data <= hypo
+        alpha = 1.0
+        s = sum(d ** (-alpha) for d in range(1, hypo + 1))
+        return (data ** (-alpha)) / s
 
 
 def estimate(suite_constr: Callable[[], Suite],
@@ -208,4 +223,13 @@ def plot_alot(suite_constr: Callable[[], Suite]):
                                f'Dataset: {dataset}',
                                ]))
 
+print()
+print('#############')
+print(' One Company')
+print('#############')
 plot_alot(Train)
+print()
+print('###############')
+print(' Multi-Company')
+print('###############')
+plot_alot(Train2)
