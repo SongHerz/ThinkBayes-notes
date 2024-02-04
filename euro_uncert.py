@@ -135,36 +135,40 @@ def plot_suites(suites: list[Suite]):
     thinkplot.Show(xlabel='x', ylabel='Probability')
 
 
-def cmp_uni_tri(constr: Callable[[], EuroMeasureUncert], update_func: Callable[[Suite], None]):
+def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureUncert]], update_func: Callable[[Suite], None]):
     '''Compare uniform and triangle prior and their posterior'''
-    uni_euro = constr()
-    uni_euro.name = 'uniform'
-    tri_euro = constr()
-    tri_euro.name = 'triangle'
-    init_with_uniform_prior(uni_euro)
-    init_with_triangle_prior(tri_euro)
+    euros = []
+    for constr in constrs:
+        uni_euro = constr()
+        uni_euro.name = f'uniform, uncert: {uni_euro.uncertainty:.2f}'
+        tri_euro = constr()
+        tri_euro.name = f'triangle, uncert: {tri_euro.uncertainty:.2f}'
+        init_with_uniform_prior(uni_euro)
+        init_with_triangle_prior(tri_euro)
+        euros.append(uni_euro)
+        euros.append(tri_euro)
 
-    plot_suites([uni_euro, tri_euro])
-    update_func(uni_euro)
-    update_func(tri_euro)
+    plot_suites(euros)
+    for euro in euros:
+        update_func(euro)
 
-    print()
-    print("##############################")
-    print(" Posterior from Uniform Prior")
-    print("##############################")
-    summary_suite(uni_euro)
+    for euro in euros:
+        print()
+        print("##############################")
+        print(f" Posterior from {euro.name}")
+        print("##############################")
+        summary_suite(euro)
 
-    print()
-    print("###############################")
-    print(" Posterior from Triangle Prior")
-    print("###############################")
-    summary_suite(tri_euro)
-
-    plot_suites([uni_euro, tri_euro])
+    plot_suites(euros)
 
 
 HEADS = 140
 TAILS = 110
 
-cmp_uni_tri(lambda: EuroMeasureUncert(0), lambda e: update(e, HEADS, TAILS))
-# cmp_uni_tri(lambda: EuroMeasureUncert(0.1), lambda e: update(e, HEADS, TAILS))
+cmp_uni_tri(
+    [lambda: EuroMeasureUncert(0), 
+     lambda: EuroMeasureUncert(0.1),
+     lambda: EuroMeasureUncert(0.25),
+    ],
+    lambda e: update(e, HEADS, TAILS),
+)
