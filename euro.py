@@ -53,15 +53,15 @@ def init_with_triangle_prior(suite: Suite):
     suite.Normalize()
 
 
-def update_euro(euro: Euro):
+def update_euro(euro: Euro, heads: int, tails: int):
     """Update Euro instances with data"""
-    dataset = 'H' * 140 + 'T' * 110
+    dataset = 'H' * heads + 'T' * tails
     euro.UpdateSet(dataset)
 
-def update_eurofast(eurofast: EuroFast):
+
+def update_eurofast(eurofast: EuroFast, heads: int, tails: int):
     """Update EuroFast instances with data"""
-    # heads: 140, tails: 100
-    data = (140, 100)
+    data = (heads, tails)
     eurofast.Update(data)
 
 
@@ -111,10 +111,14 @@ def cmp_uni_tri(constr: Callable[[], Euro], update: Callable[[Suite], None]):
     plot_suites([uni_euro, tri_euro])
 
 
-cmp_uni_tri(Euro, update_euro)
+HEADS = 140
+TAILS = 110
+
+cmp_uni_tri(Euro, lambda e: update_euro(e, HEADS, TAILS))
 
 print()
-print('# !!!! WARNING !!!!')
-print('# with EuroFast, number becomes too small,')
-print('# and the final result are not the same as the final result of Euro')
-cmp_uni_tri(EuroFast, update_eurofast)
+print('#########################################')
+print('#                EuroFast               #')
+print('# Calculate likelihood in constant time #')
+print('#########################################')
+cmp_uni_tri(EuroFast, lambda e: update_eurofast(e, HEADS, TAILS))
