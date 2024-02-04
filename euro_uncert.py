@@ -13,45 +13,82 @@ from thinkbayes import Suite, Percentile, CredibleInterval
 import thinkplot
 
 
+class Euro(Suite):
+    """
+    Calcuate probability of coin head side up probabilities.
+    """
+    def Likelihood(self, data, hypo):
+        x = hypo
+
+        if data == 'H':
+            return x / 100
+        else:
+            return 1 - x / 100
+
+
 class EuroMeasureUncert(Suite):
     """
     Euro coin problem with measurement uncertainty
     """
-    def __init__(self, y: float):
+    def __init__(self, uncert: float):
         super().__init__()
-        assert 0.0 <= y <= 1.0
-        self._y = y
+        assert 0.0 <= uncert <= 1.0
+        self._uncert = uncert
+
+    @property
+    def uncertainty(self) -> float:
+        """Return measurement uncertainty"""
+        return self._uncert
 
     def Likelihood(self, data, hypo):
+        """
+        Denote:
+        - hypo H: Head up with given hypothesis
+        - hypo T: Tail up with given hypothesis
+
+        Because of uncertainty, there are 4 scenarios:
+        - hypo H -> measured H: denote h2h
+        - hypo H -> measured T: denote h2t
+        - hypo T -> measured T: denote t2t
+        - hypo T -> measured H: denote t2h
+
+        Given hypothesis head up probability is x%
+        hypo H likelihood: x / 100
+        hypo T likelihood: 1 - hypo H likelihood = 1 - x / 100
+
+        measured H likelihood = h2h likelihood + t2h likelihood
+        measured T likelihood = t2t likelihood + h2t likelihood
+
+        h2h likelihood = hypo H likelihood * (1 - uncertainty)
+        h2t likelihood = hypo H likelihood * uncertainty
+
+        t2t likelihood = hypo T likelihood * (1 - uncertainty)
+        t2h likelihood = hypo T likelihood * uncertainty
+
+        ==>
+        measured H likelihood
+        = h2h likelihood + t2h likelihood
+        = hypo H likelihood * (1 - uncertainty) + hypo T likelihood * uncertainty
+        = (x / 100) * (1 - uncertainty) + (1 - x / 100) * uncertainty
+
+        measured T likelihood
+        = t2t likelihood + h2t likelihood
+        = hypo T likelihood * (1 - uncertainty) + hypo H likelihood * uncertainty
+        = (1 - x / 100) * (1 - uncertainty) + (x / 100) * uncertainty
+
+        And it is easy to verify that, when uncertainty is zero.
+        measured H likelihood = x / 100 = hypo H likelihood
+        measured T likelihood = 1 - x / 100 = hypo T likelihood
+        """
         x = hypo
 
-        head_lh = None # head likelihood
-        tail_lh = None # tail likelihood
+        hypo_H_like = x / 100
+        hypo_T_like = 1 - x / 100
 
         if data == 'H':
-            ideal_head_lh = x / 100
-            head_lh = ideal_head_lh * (1 - self._y)
-            tail_lh = ideal_head_lh * self._y
+            return hypo_H_like * (1 - self._uncert) + hypo_T_like * self._uncert
         else:
-            ideal_tail_lh = 1 - x / 100
-            tail_lh = ideal_tail_lh * (1 - self._y)
-            head_lh = ideal_tail_lh * self._y
-
-        assert head_lh is not None
-        assert tail_lh is not None
-
-        return head_lh, tail_lh
-
-    def Update(self, data):
-        for hypo in self.Values():
-            head_like, tail_like = self.Likelihood(data, hypo)
-            self.Mult(hypo, head_like)
-            self.Mult(hypo, tail_like)
-
-        return self.Normalize()
-
-    def UpdateSet(self, dataset):
-        raise NotImplementedError("Must IMPLEMENT")
+            return hypo_T_like * (1 - self._uncert) + hypo_H_like * self._uncert
 
 
 def init_with_uniform_prior(suite: Suite):
@@ -129,5 +166,5 @@ def cmp_uni_tri(constr: Callable[[], EuroMeasureUncert], update_func: Callable[[
 HEADS = 140
 TAILS = 110
 
-cmp_uni_tri(lambda: EuroMeasureUncert(0.00001), lambda e: update(e, HEADS, TAILS))
-cmp_uni_tri(lambda: EuroMeasureUncert(0.5), lambda e: update(e, HEADS, TAILS))
+cmp_uni_tri(lambda: EuroMeasureUncert(0), lambda e: update(e, HEADS, TAILS))
+# cmp_uni_tri(lambda: EuroMeasureUncert(0.1), lambda e: update(e, HEADS, TAILS))
