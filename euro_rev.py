@@ -2,7 +2,7 @@
 """
 Exercise 4-1
 
-An uncertainty `y` introduced.
+An reversibility `y` introduced.
 Head may be reported as tail with probability `y`.
 Tail may be reported as head with probability `y`.
 """
@@ -26,19 +26,19 @@ class Euro(Suite):
             return 1 - x / 100
 
 
-class EuroMeasureUncert(Suite):
+class EuroMeasureRev(Suite):
     """
-    Euro coin problem with measurement uncertainty
+    Euro coin problem with measurement reversibility
     """
-    def __init__(self, uncert: float):
+    def __init__(self, rev: float):
         super().__init__()
-        assert 0.0 <= uncert <= 1.0
-        self._uncert = uncert
+        assert 0.0 <= rev <= 1.0
+        self._rev = rev
 
     @property
-    def uncertainty(self) -> float:
-        """Return measurement uncertainty"""
-        return self._uncert
+    def reversibility(self) -> float:
+        """Return measurement reversibility"""
+        return self._rev
 
     def Likelihood(self, data, hypo):
         """
@@ -46,7 +46,7 @@ class EuroMeasureUncert(Suite):
         - hypo H: Head up with given hypothesis
         - hypo T: Tail up with given hypothesis
 
-        Because of uncertainty, there are 4 scenarios:
+        Because of reversibility, there are 4 scenarios:
         - hypo H -> measured H: denote h2h
         - hypo H -> measured T: denote h2t
         - hypo T -> measured T: denote t2t
@@ -59,24 +59,24 @@ class EuroMeasureUncert(Suite):
         measured H likelihood = h2h likelihood + t2h likelihood
         measured T likelihood = t2t likelihood + h2t likelihood
 
-        h2h likelihood = hypo H likelihood * (1 - uncertainty)
-        h2t likelihood = hypo H likelihood * uncertainty
+        h2h likelihood = hypo H likelihood * (1 - reversibility)
+        h2t likelihood = hypo H likelihood * reversibility
 
-        t2t likelihood = hypo T likelihood * (1 - uncertainty)
-        t2h likelihood = hypo T likelihood * uncertainty
+        t2t likelihood = hypo T likelihood * (1 - reversibility)
+        t2h likelihood = hypo T likelihood * reversibility
 
         ==>
         measured H likelihood
         = h2h likelihood + t2h likelihood
-        = hypo H likelihood * (1 - uncertainty) + hypo T likelihood * uncertainty
-        = (x / 100) * (1 - uncertainty) + (1 - x / 100) * uncertainty
+        = hypo H likelihood * (1 - reversibility) + hypo T likelihood * reversibility
+        = (x / 100) * (1 - reversibility) + (1 - x / 100) * reversibility
 
         measured T likelihood
         = t2t likelihood + h2t likelihood
-        = hypo T likelihood * (1 - uncertainty) + hypo H likelihood * uncertainty
-        = (1 - x / 100) * (1 - uncertainty) + (x / 100) * uncertainty
+        = hypo T likelihood * (1 - reversibility) + hypo H likelihood * reversibility
+        = (1 - x / 100) * (1 - reversibility) + (x / 100) * reversibility
 
-        And it is easy to verify that, when uncertainty is zero.
+        And it is easy to verify that, when reversibility is zero.
         measured H likelihood = x / 100 = hypo H likelihood
         measured T likelihood = 1 - x / 100 = hypo T likelihood
         """
@@ -86,9 +86,9 @@ class EuroMeasureUncert(Suite):
         hypo_T_like = 1 - x / 100
 
         if data == 'H':
-            return hypo_H_like * (1 - self._uncert) + hypo_T_like * self._uncert
+            return hypo_H_like * (1 - self._rev) + hypo_T_like * self._rev
         else:
-            return hypo_T_like * (1 - self._uncert) + hypo_H_like * self._uncert
+            return hypo_T_like * (1 - self._rev) + hypo_H_like * self._rev
 
 
 def init_with_uniform_prior(suite: Suite):
@@ -110,7 +110,7 @@ def init_with_triangle_prior(suite: Suite):
     suite.Normalize()
 
 
-def update(euro: EuroMeasureUncert | Euro, heads: int, tails: int):
+def update(euro: EuroMeasureRev | Euro, heads: int, tails: int):
     """Update Euro instances with data"""
     dataset = 'H' * heads + 'T' * tails
     euro.UpdateSet(dataset)
@@ -134,15 +134,15 @@ def plot_suites(suites: list[Suite]):
     thinkplot.Show(xlabel='x', ylabel='Probability')
 
 
-def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureUncert]],
+def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureRev]],
                 update_func: Callable[[Suite], None]):
     '''Compare uniform and triangle prior and their posterior'''
     euros = []
     for constr in constrs:
         uni_euro = constr()
-        uni_euro.name = f'uniform, uncert: {uni_euro.uncertainty:.2f}'
+        uni_euro.name = f'uniform, rev: {uni_euro.reversibility:.2f}'
         tri_euro = constr()
-        tri_euro.name = f'triangle, uncert: {tri_euro.uncertainty:.2f}'
+        tri_euro.name = f'triangle, rev: {tri_euro.reversibility:.2f}'
         init_with_uniform_prior(uni_euro)
         init_with_triangle_prior(tri_euro)
         euros.append(uni_euro)
@@ -167,27 +167,27 @@ if __name__ == '__main__':
     TAILS = 110
 
     ###############################################
-    # Compare EuroMeasureUncert(0) and plain Euro.
+    # Compare EuroMeasureRev(0) and plain Euro.
     # They must be equal.
     ###############################################
     euro = Euro()
-    euro_uncert_0 = EuroMeasureUncert(0)
+    euro_rev_0 = EuroMeasureRev(0)
     init_with_uniform_prior(euro)
-    init_with_uniform_prior(euro_uncert_0)
+    init_with_uniform_prior(euro_rev_0)
 
     # Values must be the same after initialization
-    assert euro.d.keys() == euro_uncert_0.d.keys()
+    assert euro.d.keys() == euro_rev_0.d.keys()
     for k, v in euro.d.items():
-        v2 = euro_uncert_0.d[k]
+        v2 = euro_rev_0.d[k]
         assert v == v2
 
     update(euro, HEADS, TAILS)
-    update(euro_uncert_0, HEADS, TAILS)
+    update(euro_rev_0, HEADS, TAILS)
 
     # Values must be the same after updating
-    assert euro.d.keys() == euro_uncert_0.d.keys()
+    assert euro.d.keys() == euro_rev_0.d.keys()
     for k, v in euro.d.items():
-        v2 = euro_uncert_0.d[k]
+        v2 = euro_rev_0.d[k]
         assert abs(v - v2) < 0.0001
 
 
@@ -195,9 +195,9 @@ if __name__ == '__main__':
     # Plot and print statistics #
     #############################
     cmp_uni_tri(
-        [lambda: EuroMeasureUncert(0),
-         lambda: EuroMeasureUncert(0.1),
-         lambda: EuroMeasureUncert(0.25),
+        [lambda: EuroMeasureRev(0),
+         lambda: EuroMeasureRev(0.1),
+         lambda: EuroMeasureRev(0.25),
         ],
         lambda e: update(e, HEADS, TAILS),
     )
