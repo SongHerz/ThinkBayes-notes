@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Calculate euro coin uniformness
+Exercise 4-1
+
+An uncertainty `y` introduced.
+Head may be reported as tail with probability `y`.
+Tail may be reported as head with probability `y`.
 """
 
 from typing import Callable
@@ -9,29 +13,45 @@ from thinkbayes import Suite, Percentile, CredibleInterval
 import thinkplot
 
 
-class Euro(Suite):
+class EuroMeasureUncert(Suite):
     """
-    Calcuate probability of coin head side up probabilities.
+    Euro coin problem with measurement uncertainty
     """
+    def __init__(self, y: float):
+        super().__init__()
+        assert 0.0 <= y <= 1.0
+        self._y = y
+
     def Likelihood(self, data, hypo):
         x = hypo
 
-        if data == 'H':
-            return x / 100
-        else:
-            return 1 - x / 100
+        head_lh = None # head likelihood
+        tail_lh = None # tail likelihood
 
-class EuroFast(Suite):
-    """
-    Calcuate probability of coin head side up probabilities.
-    """
-    def Likelihood(self, data, hypo):
-        """
-        data is in (heads count, tails count)
-        """
-        x = hypo / 100.0
-        heads, tails = data
-        return (x ** heads) * ((1 - x) ** tails)
+        if data == 'H':
+            ideal_head_lh = x / 100
+            head_lh = ideal_head_lh * (1 - self._y)
+            tail_lh = ideal_head_lh * self._y
+        else:
+            ideal_tail_lh = 1 - x / 100
+            tail_lh = ideal_tail_lh * (1 - self._y)
+            head_lh = ideal_tail_lh * self._y
+
+        assert head_lh is not None
+        assert tail_lh is not None
+
+        return head_lh, tail_lh
+
+    def Update(self, data):
+        for hypo in self.Values():
+            head_like, tail_like = self.Likelihood(data, hypo)
+            self.Mult(hypo, head_like)
+            self.Mult(hypo, tail_like)
+
+        return self.Normalize()
+
+    def UpdateSet(self, dataset):
+        raise NotImplementedError("Must IMPLEMENT")
 
 
 def init_with_uniform_prior(suite: Suite):
@@ -53,16 +73,11 @@ def init_with_triangle_prior(suite: Suite):
     suite.Normalize()
 
 
-def update_euro(euro: Euro, heads: int, tails: int):
+def update(euro: EuroMeasureUncert, heads: int, tails: int):
     """Update Euro instances with data"""
     dataset = 'H' * heads + 'T' * tails
-    euro.UpdateSet(dataset)
-
-
-def update_eurofast(eurofast: EuroFast, heads: int, tails: int):
-    """Update EuroFast instances with data"""
-    data = (heads, tails)
-    eurofast.Update(data)
+    for data in dataset:
+        euro.Update(data)
 
 
 def summary_suite(suite: Suite):
@@ -83,7 +98,7 @@ def plot_suites(suites: list[Suite]):
     thinkplot.Show(xlabel='x', ylabel='Probability')
 
 
-def cmp_uni_tri(constr: Callable[[], Euro], update: Callable[[Suite], None]):
+def cmp_uni_tri(constr: Callable[[], EuroMeasureUncert], update_func: Callable[[Suite], None]):
     '''Compare uniform and triangle prior and their posterior'''
     uni_euro = constr()
     uni_euro.name = 'uniform'
@@ -93,8 +108,8 @@ def cmp_uni_tri(constr: Callable[[], Euro], update: Callable[[Suite], None]):
     init_with_triangle_prior(tri_euro)
 
     plot_suites([uni_euro, tri_euro])
-    update(uni_euro)
-    update(tri_euro)
+    update_func(uni_euro)
+    update_func(tri_euro)
 
     print()
     print("##############################")
@@ -114,11 +129,5 @@ def cmp_uni_tri(constr: Callable[[], Euro], update: Callable[[Suite], None]):
 HEADS = 140
 TAILS = 110
 
-cmp_uni_tri(Euro, lambda e: update_euro(e, HEADS, TAILS))
-
-print()
-print('#########################################')
-print('#                EuroFast               #')
-print('# Calculate likelihood in constant time #')
-print('#########################################')
-cmp_uni_tri(EuroFast, lambda e: update_eurofast(e, HEADS, TAILS))
+cmp_uni_tri(lambda: EuroMeasureUncert(0.00001), lambda e: update(e, HEADS, TAILS))
+cmp_uni_tri(lambda: EuroMeasureUncert(0.5), lambda e: update(e, HEADS, TAILS))
