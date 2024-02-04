@@ -110,11 +110,10 @@ def init_with_triangle_prior(suite: Suite):
     suite.Normalize()
 
 
-def update(euro: EuroMeasureUncert, heads: int, tails: int):
+def update(euro: EuroMeasureUncert | Euro, heads: int, tails: int):
     """Update Euro instances with data"""
     dataset = 'H' * heads + 'T' * tails
-    for data in dataset:
-        euro.Update(data)
+    euro.UpdateSet(dataset)
 
 
 def summary_suite(suite: Suite):
@@ -135,7 +134,8 @@ def plot_suites(suites: list[Suite]):
     thinkplot.Show(xlabel='x', ylabel='Probability')
 
 
-def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureUncert]], update_func: Callable[[Suite], None]):
+def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureUncert]],
+                update_func: Callable[[Suite], None]):
     '''Compare uniform and triangle prior and their posterior'''
     euros = []
     for constr in constrs:
@@ -162,13 +162,42 @@ def cmp_uni_tri(constrs: list[Callable[[], EuroMeasureUncert]], update_func: Cal
     plot_suites(euros)
 
 
-HEADS = 140
-TAILS = 110
+if __name__ == '__main__':
+    HEADS = 140
+    TAILS = 110
 
-cmp_uni_tri(
-    [lambda: EuroMeasureUncert(0), 
-     lambda: EuroMeasureUncert(0.1),
-     lambda: EuroMeasureUncert(0.25),
-    ],
-    lambda e: update(e, HEADS, TAILS),
-)
+    ###############################################
+    # Compare EuroMeasureUncert(0) and plain Euro.
+    # They must be equal.
+    ###############################################
+    euro = Euro()
+    euro_uncert_0 = EuroMeasureUncert(0)
+    init_with_uniform_prior(euro)
+    init_with_uniform_prior(euro_uncert_0)
+
+    # Values must be the same after initialization
+    assert euro.d.keys() == euro_uncert_0.d.keys()
+    for k, v in euro.d.items():
+        v2 = euro_uncert_0.d[k]
+        assert v == v2
+
+    update(euro, HEADS, TAILS)
+    update(euro_uncert_0, HEADS, TAILS)
+
+    # Values must be the same after updating
+    assert euro.d.keys() == euro_uncert_0.d.keys()
+    for k, v in euro.d.items():
+        v2 = euro_uncert_0.d[k]
+        assert abs(v - v2) < 0.0001
+
+
+    #############################
+    # Plot and print statistics #
+    #############################
+    cmp_uni_tri(
+        [lambda: EuroMeasureUncert(0),
+         lambda: EuroMeasureUncert(0.1),
+         lambda: EuroMeasureUncert(0.25),
+        ],
+        lambda e: update(e, HEADS, TAILS),
+    )
