@@ -3,6 +3,8 @@
 Calculate euro coin uniformness
 """
 
+from typing import Callable, Any
+
 from thinkbayes import Suite, Percentile, CredibleInterval
 import thinkplot
 
@@ -81,57 +83,38 @@ def plot_suites(suites: list[Suite]):
     thinkplot.Show(xlabel='x', ylabel='Probability')
 
 
-uni_euro = Euro()
-uni_euro.name = 'uniform'
-tri_euro = Euro()
-tri_euro.name = 'triangle'
-init_with_uniform_prior(uni_euro)
-init_with_triangle_prior(tri_euro)
+def cmp_uni_tri(constr: Callable[[], Euro], update: Callable[[Suite], None]):
+    '''Compare uniform and triangle prior and their posterior'''
+    uni_euro = constr()
+    uni_euro.name = 'uniform'
+    tri_euro = constr()
+    tri_euro.name = 'triangle'
+    init_with_uniform_prior(uni_euro)
+    init_with_triangle_prior(tri_euro)
 
-plot_suites([uni_euro, tri_euro])
-update_euro(uni_euro)
-update_euro(tri_euro)
+    plot_suites([uni_euro, tri_euro])
+    update(uni_euro)
+    update(tri_euro)
 
-print()
-print("##############################")
-print(" Posterior from Uniform Prior")
-print("##############################")
-summary_suite(uni_euro)
+    print()
+    print("##############################")
+    print(" Posterior from Uniform Prior")
+    print("##############################")
+    summary_suite(uni_euro)
 
-print()
-print("###############################")
-print(" Posterior from Triangle Prior")
-print("###############################")
-summary_suite(tri_euro)
+    print()
+    print("###############################")
+    print(" Posterior from Triangle Prior")
+    print("###############################")
+    summary_suite(tri_euro)
 
-plot_suites([uni_euro, tri_euro])
+    plot_suites([uni_euro, tri_euro])
+
+
+cmp_uni_tri(Euro, update_euro)
 
 print()
 print('# !!!! WARNING !!!!')
 print('# with EuroFast, number becomes too small,')
 print('# and the final result are not the same as the final result of Euro')
-uni_eurofast = EuroFast()
-uni_eurofast.name = 'uniform'
-tri_eurofast = EuroFast()
-tri_eurofast.name = 'triangle'
-
-init_with_uniform_prior(uni_eurofast)
-init_with_triangle_prior(tri_eurofast)
-
-plot_suites([uni_eurofast, tri_eurofast])
-update_eurofast(uni_eurofast)
-update_eurofast(tri_eurofast)
-
-print()
-print("##############################")
-print(" Posterior from Uniform Prior")
-print("##############################")
-summary_suite(uni_eurofast)
-
-print()
-print("###############################")
-print(" Posterior from Triangle Prior")
-print("###############################")
-summary_suite(tri_eurofast)
-
-plot_suites([uni_eurofast, tri_eurofast])
+cmp_uni_tri(EuroFast, update_eurofast)
