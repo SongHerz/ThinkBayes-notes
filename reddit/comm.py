@@ -4,22 +4,38 @@
 Common classes for reddit problem.
 """
 
-from dataclasses import dataclass
+from enum import Enum, auto
 
-@dataclass(frozen=True)
 class User:
-    """Represent a redditor (a user)"""
-    id_: int
+    """Represent an user"""
+    def __init__(self, id_: int):
+        """Represent a redditor (a user)"""
+        self.id_ = id_
+        # Reliability 0 ~ 1
+        self.reliability = 0.5
+
+    @property
+    def reliability(self):
+        """Return reliability value"""
+        return self._reliability
+
+    @reliability.setter
+    def reliability(self, v: float):
+        assert 0 <= v <= 1.0
+        self._reliability = v
 
 
-@dataclass(frozen=True)
+class VoteDir(Enum):
+    """Vote directions"""
+    UP = auto()
+    DOWN = auto()
+
+
 class Vote:
     """Represent a vote"""
-    UP = 0
-    DOWN = 1
-    def __init__(self, user: User, vote: int):
+    def __init__(self, user: User, dir_: VoteDir):
         self.user = user
-        self.vote = vote
+        self.dir_ = dir_
 
 
 class Link:
@@ -64,3 +80,18 @@ class LinkPool:
             link = Link(id_)
             self._links[link.id_] = link
             return link
+
+
+class ResourcePool:
+    """Encapsulate all resource retrieval"""
+    def __init__(self):
+        self._user_pool = UserPool()
+        self._link_pool = LinkPool()
+
+    def get_user(self, id_: int) -> User:
+        """Get User object with given user id"""
+        return self._user_pool.get(id_)
+
+    def get_link(self, id_: int) -> Link:
+        """Get Link object with given link id"""
+        return self._link_pool.get(id_)
