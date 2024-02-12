@@ -4,7 +4,9 @@
 Common classes for reddit problem.
 """
 
+from typing import Iterator
 from enum import Enum, auto
+from dataclasses import dataclass
 
 class User:
     """Represent an user"""
@@ -49,12 +51,22 @@ class Link:
         """Add a vote to this link"""
         self.user_votes[vote.user.id_] = vote
 
+    @property
+    def votes(self) -> Iterator[Vote]:
+        """Return an iterator on votes of this link"""
+        return self.user_votes.values()
+
 
 class UserPool:
     """All users"""
     def __init__(self):
         # {id: User}
         self._users = {}
+
+    @property
+    def users(self) -> Iterator[User]:
+        """Return an iterator on all users"""
+        return self._users.values()
 
     def get(self, id_: int) -> User:
         """Lazily retrieve an user"""
@@ -71,6 +83,11 @@ class LinkPool:
     def __init__(self):
         # {id: Link}
         self._links = {}
+
+    @property
+    def links(self) -> Iterator[Link]:
+        """Return an iterator on all links"""
+        return self._links.values()
 
     def get(self, id_: int) -> Link:
         """Lazily retrieve a link"""
@@ -95,3 +112,52 @@ class ResourcePool:
     def get_link(self, id_: int) -> Link:
         """Get Link object with given link id"""
         return self._link_pool.get(id_)
+
+    @dataclass(frozen=True)
+    class LinkVote:
+        """Combination of (a link that an user has voted, the vote)"""
+        link: Link
+        vote: Vote
+
+    def _print_user_summary(self):
+        # {user id: LinkVote}
+        uid_lv_map = {}
+        for link in self._link_pool.links:
+            for vote in link.votes:
+                uid = vote.user.id_
+                if uid not in uid_lv_map:
+                    uid_lv_map[uid] = []
+
+                uid_lv_map[uid].append(self.LinkVote(link=link, vote=vote))
+
+        for user in self._user_pool.users:
+            uid = user.id_
+            lvs = uid_lv_map.get(uid, [])
+            print(f'User: {uid}, votes: {len(lvs)}')
+
+    def _print_link_summary(self):
+        links = sorted(self._link_pool.links, key=lambda link: link.id_)
+
+        for link in links:
+            upvotes = []
+            downvotes = []
+            for vote in link.votes:
+                if vote.dir_ == VoteDir.UP:
+                    upvotes.append(vote)
+                else:
+                    assert vote.dir_ == VoteDir.DOWN
+                    downvotes.append(vote)
+
+            print(f'Link: {link.id_}, up: {len(upvotes)}, down: {len(downvotes)}')
+
+    def print_summary(self):
+        """Show summary by users and links"""
+        print('##############')
+        print(' User Summary')
+        print('##############')
+        self._print_user_summary()
+        print()
+        print('##############')
+        print(' Link Summary')
+        print('##############')
+        self._print_link_summary()
