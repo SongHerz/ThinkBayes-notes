@@ -5,12 +5,13 @@ Generate test vector
 
 import math
 from random import Random
+from collections import Counter
 import numpy as np
 
 from .comm import VoteDir
 
 
-def _calc_reversibility(reliability: float) -> float:
+def _reliability_to_reversibility(reliability: float) -> float:
     """Calculate vote reversibility given reliability"""
     assert 0.0 <= reliability <= 1.0
 
@@ -19,6 +20,10 @@ def _calc_reversibility(reliability: float) -> float:
     # 0 -> 0.5
     # ==> reversibility = (-0.5) * reliability + 0.5
     return (-0.5) *  reliability + 0.5
+
+def _reversibility_to_reliability(reversibility: float) -> float:
+    """Reverse function of _reliability_to_reversibility"""
+    return (-2) * reversibility + 1
 
 
 def _reverse_vote_dir(vote_dir: VoteDir) -> VoteDir:
@@ -33,7 +38,7 @@ def _calc_vote_dir(rand: Random, reliability: float, intended_vote_dir: VoteDir)
     """
     Calculate user vote based on its reliability.
     """
-    rev = _calc_reversibility(reliability)
+    rev = _reliability_to_reversibility(reliability)
 
     roll = rand.random()
     if rev < roll:
@@ -66,6 +71,9 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     uid_reli_map = {}
     uid_reli_map.update(x for x in zip(user_ids, list(np.linspace(start=1.0, stop=0.0, num=len(user_ids), dtype=float))))
 
+    ########################
+    # Generate test vector #
+    ########################
     # {(uid, link id): vote_dir}
     vote_map = {}
     for uid, reli in uid_reli_map.items():
@@ -87,6 +95,32 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
             vote_dir = _calc_vote_dir(rand, reli, VoteDir.DOWN)
             vote_map[k] = vote_dir
 
+    ####################################################
+    # Calculate User Reliability After Vote Simulation #
+    ####################################################
+    # {uid: relibility}
+    sim_uid_vote_intended_cnt_map = Counter()
+    sim_uid_vote_unintended_cnt_map = Counter()
+    for (uid, link_id), vote_dir in vote_map.items():
+        if link_id in good_link_ids:
+            is_intended_vote_dir = (vote_dir == VoteDir.UP)
+        else:
+            assert link_id in bad_link_ids
+            is_intended_vote_dir = (vote_dir == VoteDir.DOWN)
+
+        if is_intended_vote_dir:
+            sim_uid_vote_intended_cnt_map[uid] += 1
+        else:
+            sim_uid_vote_unintended_cnt_map[uid] += 1
+
+    sim_uid_reli_map = {}
+    for uid in user_ids:
+        intended_votes = sim_uid_vote_intended_cnt_map[uid]
+        unintended_votes = sim_uid_vote_unintended_cnt_map[uid]
+        reversibility = unintended_votes / (intended_votes + unintended_votes)
+        reliability = _reversibility_to_reliability(reversibility)
+        sim_uid_reli_map[uid] = reliability
+
     print()
     print('#####################')
     print(' Test Vector Summary')
@@ -98,7 +132,8 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     print()
     print('# User reliability')
     for uid, reli in uid_reli_map.items():
-        print(f'user: {uid}, reliability: {reli}')
+        sim_reli = sim_uid_reli_map[uid]
+        print(f'user: {uid}, reliability: {reli}, sim reliability: {sim_reli}')
 
     print()
 
