@@ -17,7 +17,7 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     """
     rand = Random(100)
 
-    USER_COUNT = 5
+    USER_COUNT = 8
     LINK_COUNT = 15
     user_ids = list(range(USER_COUNT))
 
@@ -34,38 +34,42 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
 
     # {(uid, link id): vote_dir}
     vote_map = {}
-    for uid in user_ids:
+    for uid, reli in uid_reli_map.items():
         for link_id in good_link_ids:
-            # link_id = rand.choice(link_ids)
-            # dir_ = rand.randint(0, 1)
-            # FIXME: calculate dir based on good/bad link and user reliability
-            dir_ = 0
+            # Linear Map reliability -> revsersibility
+            # 1 -> 0
+            # 0 -> 0.5
+            # ==> reversibility = (-0.5) * reliability + 0.5
+            reversibility = (-0.5) *  reli + 0.5
+
+            roll = rand.random()
+            if reversibility < roll:
+                # Keep intended vote
+                vote_dir = VoteDir.UP
+            else:
+                # Reverse intended vote
+                vote_dir = VoteDir.DOWN
 
             k = (uid, link_id)
             if k in vote_map:
                 # Only the first random vote sound.
                 continue
-
-            if dir_ == 0:
-                vote_dir = VoteDir.UP
-            else:
-                vote_dir = VoteDir.DOWN
 
             vote_map[k] = vote_dir
 
         for link_id in bad_link_ids:
-            # FIXME: calculate dir based on good/bad link and user reliability
-            dir_ = 1
+            reversibility = (-0.5) *  reli + 0.5
+
+            roll = rand.random()
+            if reversibility < roll:
+                vote_dir = VoteDir.DOWN
+            else:
+                vote_dir = VoteDir.UP
 
             k = (uid, link_id)
             if k in vote_map:
                 # Only the first random vote sound.
                 continue
-
-            if dir_ == 0:
-                vote_dir = VoteDir.UP
-            else:
-                vote_dir = VoteDir.DOWN
 
             vote_map[k] = vote_dir
 
