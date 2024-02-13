@@ -10,6 +10,40 @@ import numpy as np
 from .comm import VoteDir
 
 
+def _calc_reversibility(reliability: float) -> float:
+    """Calculate vote reversibility given reliability"""
+    assert 0.0 <= reliability <= 1.0
+
+    # Linear Map reliability -> revsersibility
+    # 1 -> 0
+    # 0 -> 0.5
+    # ==> reversibility = (-0.5) * reliability + 0.5
+    return (-0.5) *  reliability + 0.5
+
+
+def _reverse_vote_dir(vote_dir: VoteDir) -> VoteDir:
+    if vote_dir == VoteDir.UP:
+        return VoteDir.DOWN
+    else:
+        assert vote_dir == VoteDir.DOWN
+        return VoteDir.UP
+
+
+def _calc_vote_dir(rand: Random, reliability: float, intended_vote_dir: VoteDir) -> VoteDir:
+    """
+    Calculate user vote based on its reliability.
+    """
+    rev = _calc_reversibility(reliability)
+
+    roll = rand.random()
+    if rev < roll:
+        # Keep intended vote
+        return intended_vote_dir
+    else:
+        # Reverse intended vote
+        return _reverse_vote_dir(intended_vote_dir)
+
+
 def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     """
     Generate test vector.
@@ -36,41 +70,21 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     vote_map = {}
     for uid, reli in uid_reli_map.items():
         for link_id in good_link_ids:
-            # Linear Map reliability -> revsersibility
-            # 1 -> 0
-            # 0 -> 0.5
-            # ==> reversibility = (-0.5) * reliability + 0.5
-            reversibility = (-0.5) *  reli + 0.5
-
-            roll = rand.random()
-            if reversibility < roll:
-                # Keep intended vote
-                vote_dir = VoteDir.UP
-            else:
-                # Reverse intended vote
-                vote_dir = VoteDir.DOWN
-
             k = (uid, link_id)
             if k in vote_map:
                 # Only the first random vote sound.
                 continue
 
+            vote_dir = _calc_vote_dir(rand, reli, VoteDir.UP)
             vote_map[k] = vote_dir
 
         for link_id in bad_link_ids:
-            reversibility = (-0.5) *  reli + 0.5
-
-            roll = rand.random()
-            if reversibility < roll:
-                vote_dir = VoteDir.DOWN
-            else:
-                vote_dir = VoteDir.UP
-
             k = (uid, link_id)
             if k in vote_map:
                 # Only the first random vote sound.
                 continue
 
+            vote_dir = _calc_vote_dir(rand, reli, VoteDir.DOWN)
             vote_map[k] = vote_dir
 
     print()
