@@ -20,3 +20,4 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
     link = _g_pool.get_link(link_id)
     vote_ = Vote(user, dir_)
     link.add_vote(vote_)
+    link.update_quality()

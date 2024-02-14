@@ -46,6 +46,7 @@ class Link:
         self.id_ = id_
         # {user id: Vote}
         self.user_votes = {}
+        self._quality = None
 
     def add_vote(self, vote: Vote):
         """Add a vote to this link"""
@@ -55,6 +56,29 @@ class Link:
     def votes(self) -> Iterator[Vote]:
         """Return an iterator on votes of this link"""
         return self.user_votes.values()
+
+    @property
+    def quality(self) -> float | None:
+        return self._quality
+
+    def update_quality(self):
+        """Update quality of this link according to all votes"""
+        up_votes = 0
+        down_votes = 0
+        for vote in self.user_votes.values():
+            if vote.dir_ == VoteDir.UP:
+                up_votes += 1
+            else:
+                assert vote.dir_ == VoteDir.DOWN
+                down_votes += 1
+
+        tot_votes = up_votes + down_votes
+        assert tot_votes >= 0
+        if tot_votes == 0:
+            # unable to determine the quality
+            self._quality = None
+        else:
+            self._quality = up_votes / tot_votes
 
 
 class UserPool:
@@ -133,7 +157,7 @@ class ResourcePool:
         for user in self._user_pool.users:
             uid = user.id_
             lvs = uid_lv_map.get(uid, [])
-            print(f'User: {uid}, votes: {len(lvs)}')
+            print(f'User: {uid}, votes: {len(lvs)}, reliability: {user.reliability}')
 
     def _print_link_summary(self):
         links = sorted(self._link_pool.links, key=lambda link: link.id_)
@@ -148,7 +172,7 @@ class ResourcePool:
                     assert vote.dir_ == VoteDir.DOWN
                     downvotes.append(vote)
 
-            print(f'Link: {link.id_}, up: {len(upvotes)}, down: {len(downvotes)}')
+            print(f'Link: {link.id_}, up: {len(upvotes)}, down: {len(downvotes)}, quality: {link.quality}')
 
     def print_summary(self):
         """Show summary by users and links"""
