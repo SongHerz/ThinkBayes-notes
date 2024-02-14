@@ -57,8 +57,13 @@ class Link:
         """Return an iterator on votes of this link"""
         return self.user_votes.values()
 
+    def get_vote(self, u: User) -> Vote | None:
+        """Return a vote by given user"""
+        return self.user_votes.get(u.id_, None)
+
     @property
     def quality(self) -> float | None:
+        """Quality of this link"""
         return self._quality
 
     def update_quality(self):
@@ -136,6 +141,11 @@ class ResourcePool:
     def get_link(self, id_: int) -> Link:
         """Get Link object with given link id"""
         return self._link_pool.get(id_)
+
+    @property
+    def links(self) -> Iterator[Link]:
+        """Return an iterator on all links"""
+        return self._link_pool.links
 
     @dataclass(frozen=True)
     class LinkVote:
