@@ -11,20 +11,27 @@ import numpy as np
 from .comm import VoteDir
 
 
-def _reliability_to_reversibility(reliability: float) -> float:
-    """Calculate vote reversibility given reliability"""
-    assert 0.0 <= reliability <= 1.0
+# def _reliability_to_reversibility(reliability: float) -> float:
+#     """Calculate vote reversibility given reliability"""
+#     assert 0.0 <= reliability <= 1.0
+# 
+#     # Linear Map reliability -> revsersibility
+#     # 1 -> 0
+#     # 0 -> 0.5
+#     # ==> reversibility = (-0.5) * reliability + 0.5
+#     return (-0.5) *  reliability + 0.5
+# 
+# def _reversibility_to_reliability(reversibility: float) -> float:
+#     """Reverse function of _reliability_to_reversibility"""
+#     return (-2) * reversibility + 1
 
-    # Linear Map reliability -> revsersibility
-    # 1 -> 0
-    # 0 -> 0.5
-    # ==> reversibility = (-0.5) * reliability + 0.5
-    return (-0.5) *  reliability + 0.5
+def _reliability_to_reversibility(reliability: float) -> float:
+    assert 0.0 <= reliability <= 1.0
+    return 1.0 - reliability
 
 def _reversibility_to_reliability(reversibility: float) -> float:
-    """Reverse function of _reliability_to_reversibility"""
-    return (-2) * reversibility + 1
-
+    assert 0.0 <= reversibility <= 1.0
+    return 1.0 - reversibility
 
 def _reverse_vote_dir(vote_dir: VoteDir) -> VoteDir:
     if vote_dir == VoteDir.UP:
@@ -49,6 +56,23 @@ def _calc_vote_dir(rand: Random, reliability: float, intended_vote_dir: VoteDir)
         return _reverse_vote_dir(intended_vote_dir)
 
 
+def _get_decimal_next_order_of_magnitute(v: int) -> int:
+    """Calculate next order of magnitute
+    e.g. 
+    1. 50 -> 100
+    1. 99 -> 100
+    1. 100 -> 1000
+    """
+    assert v > 0
+    order = math.log10(v)
+    next_order = math.ceil(order)
+    if next_order == order:
+        # In case of v == 10, 100, 1000 ...
+        next_order += 1
+
+    return 10 ** next_order
+
+
 def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     """
     Generate test vector.
@@ -58,18 +82,25 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
 
     USER_COUNT = 8
     LINK_COUNT = 15
+    GOOD_LINK_RATIO = 0.8
+    GOOD_LINK_COUNT = math.floor(LINK_COUNT * GOOD_LINK_RATIO)
+    BAD_LINK_COUNT = LINK_COUNT - GOOD_LINK_COUNT
     user_ids = list(range(USER_COUNT))
 
-    GOOD_LINK_RATIO = 0.8
+    GOOD_LINK_START = 0
+    GOOD_LINK_END_INC = GOOD_LINK_START + GOOD_LINK_COUNT - 1
+    BAD_LINK_START = _get_decimal_next_order_of_magnitute(GOOD_LINK_END_INC)
+    BAD_LINK_END_INC = BAD_LINK_START + BAD_LINK_COUNT - 1
 
-    # Classify predefined good / bad links
-    last_good_link_idx_plus1 = math.floor(LINK_COUNT * GOOD_LINK_RATIO)
-    good_link_ids = list(range(0, last_good_link_idx_plus1))
-    bad_link_ids = list(range(last_good_link_idx_plus1, LINK_COUNT))
 
-    # Assign user reliability from [1.0 to 0.0]
+    # Predefined good / bad links
+    good_link_ids = list(range(GOOD_LINK_START, GOOD_LINK_END_INC + 1))
+    bad_link_ids = list(range(BAD_LINK_START, BAD_LINK_END_INC + 1))
+    assert len(set(good_link_ids).intersection(bad_link_ids)) == 0, 'No link id overlap allowed'
+
+    # Assign user reliability from 1.0 to 0.5
     uid_reli_map = {}
-    uid_reli_map.update(x for x in zip(user_ids, list(np.linspace(start=1.0, stop=0.0, num=len(user_ids), dtype=float))))
+    uid_reli_map.update(x for x in zip(user_ids, list(np.linspace(start=1.0, stop=0.5, num=len(user_ids), dtype=float))))
 
     ########################
     # Generate test vector #
@@ -121,6 +152,7 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
         reliability = _reversibility_to_reliability(reversibility)
         sim_uid_reli_map[uid] = reliability
 
+
     print()
     print('#####################')
     print(' Test Vector Summary')
@@ -133,7 +165,7 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     print('# User reliability')
     for uid, reli in uid_reli_map.items():
         sim_reli = sim_uid_reli_map[uid]
-        print(f'user: {uid}, reliability: {reli}, sim reliability: {sim_reli}')
+        print(f'user: {uid}, planned reliability: {reli}, sim reliability: {sim_reli}')
 
     print()
 
