@@ -4,14 +4,8 @@
 Reddit problem simple model.
 """
 
-from .comm import ResourcePool, VoteDir, Vote, Link, User
-
-_g_pool = ResourcePool()
-
-
-def get_pool() -> ResourcePool:
-    """Singleton ResourcePool"""
-    return _g_pool
+from .comm import VoteDir, Vote, Link, User
+from .pool import get_pool
 
 
 def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
@@ -94,8 +88,8 @@ def _update_vote_user_reliabilities(link: Link):
 
 def vote(user_id: int, link_id: int, dir_: VoteDir):
     """User vote a link"""
-    user = _g_pool.get_user(user_id)
-    link = _g_pool.get_link(link_id)
+    user = get_pool().get_user(user_id)
+    link = get_pool().get_link(link_id)
     vote_ = Vote(user, dir_)
     link.add_vote(vote_)
     link.update_quality()
