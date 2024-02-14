@@ -6,6 +6,7 @@ Common classes for reddit problem.
 
 from typing import Iterator
 from enum import Enum, auto
+from abc import ABC, abstractmethod, abstractproperty
 
 
 class User:
@@ -40,7 +41,7 @@ class Vote:
         self.dir_ = dir_
 
 
-class Link:
+class Link(ABC):
     """Represent a link"""
     def __init__(self, id_: int):
         self.id_ = id_
@@ -61,31 +62,12 @@ class Link:
         """Return a vote by given user"""
         return self.user_votes.get(u.id_, None)
 
-    @property
+    @abstractproperty
     def quality(self) -> float | None:
         """Quality of this link"""
-        return self._quality
+        raise NotImplementedError('Child class must implement this')
 
+    @abstractmethod
     def update_quality(self):
-        """Update quality of this link according to all votes"""
-        up_votes = 0
-        down_votes = 0
-        for vote in self.user_votes.values():
-            if vote.dir_ == VoteDir.UP:
-                up_votes += 1
-            else:
-                assert vote.dir_ == VoteDir.DOWN
-                down_votes += 1
-
-        tot_votes = up_votes + down_votes
-        assert tot_votes >= 0
-        if tot_votes == 0:
-            # unable to determine the quality
-            self._quality = None
-        else:
-            self._quality = up_votes / tot_votes
-
-
-
-
-
+        """Update quality of this link"""
+        raise NotImplementedError('Child class must implement this')

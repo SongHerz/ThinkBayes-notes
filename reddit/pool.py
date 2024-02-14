@@ -2,7 +2,7 @@
 
 """Pool of user and link"""
 
-from typing import Iterator
+from typing import Iterator, Callable
 from dataclasses import dataclass
 
 from .comm import User, Link, Vote, VoteDir
@@ -31,7 +31,8 @@ class UserPool:
 
 class LinkPool:
     """All linkes"""
-    def __init__(self):
+    def __init__(self, constr: Callable[[int], Link]):
+        self._constr = constr
         # {id: Link}
         self._links = {}
 
@@ -45,16 +46,16 @@ class LinkPool:
         if id_ in self._links:
             return self._links[id_]
         else:
-            link = Link(id_)
+            link = self._constr(id_)
             self._links[link.id_] = link
             return link
 
 
 class ResourcePool:
     """Encapsulate all resource retrieval"""
-    def __init__(self):
+    def __init__(self, link_constr: Callable[[int], Link]):
         self._user_pool = UserPool()
-        self._link_pool = LinkPool()
+        self._link_pool = LinkPool(link_constr)
 
     def get_user(self, id_: int) -> User:
         """Get User object with given user id"""
@@ -119,8 +120,22 @@ class ResourcePool:
         self._print_link_summary()
 
 
-_g_pool = ResourcePool()
+_g_link_constr = None
+_g_pool = None
+
+
+def cfg_pool(link_constr: Callable[[int], Link]):
+    """Config resource pool"""
+    global _g_link_constr
+    assert _g_link_constr is None, 'Only allow config pool once'
+    _g_link_constr = link_constr
+
 
 def get_pool() -> ResourcePool:
     """Singleton ResourcePool"""
+    global _g_pool
+    assert _g_link_constr is not None, 'cfg_pool must be called before calling get_pool'
+    if _g_pool is None:
+        _g_pool = ResourcePool(_g_link_constr)
+
     return _g_pool

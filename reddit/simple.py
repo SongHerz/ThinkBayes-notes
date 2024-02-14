@@ -5,10 +5,41 @@ Reddit problem simple model.
 """
 
 from .comm import VoteDir, Vote, Link, User
-from .pool import get_pool
+from .pool import cfg_pool, get_pool
 
 
-def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
+class SLink(Link):
+    """Simple Link with simple quality"""
+    def __init__(self, id_: int):
+        super().__init__(id_)
+        self._quality = None
+
+    @property
+    def quality(self) -> float | None:
+        """Quality of this link"""
+        return self._quality
+
+    def update_quality(self):
+        """Update quality of this link according to all votes"""
+        up_votes = 0
+        down_votes = 0
+        for vote in self.user_votes.values():
+            if vote.dir_ == VoteDir.UP:
+                up_votes += 1
+            else:
+                assert vote.dir_ == VoteDir.DOWN
+                down_votes += 1
+
+        tot_votes = up_votes + down_votes
+        assert tot_votes >= 0
+        if tot_votes == 0:
+            # unable to determine the quality
+            self._quality = None
+        else:
+            self._quality = up_votes / tot_votes
+
+
+def _is_user_vote_reliable(u: User, link: SLink) -> bool | None:
     """
     :return: True, the user vote for the given link is reliable
              False, the user vote for the given link is unreliable
@@ -74,7 +105,7 @@ def _update_user_reliability(u: User):
     u.reliability = reli_vote_cnt / tot_vote_cnt
 
 
-def _update_vote_user_reliabilities(link: Link):
+def _update_vote_user_reliabilities(link: SLink):
     """Update users who has vote for given link"""
     # Users to update {user id: User}
     users = {}
@@ -94,3 +125,7 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
     link.add_vote(vote_)
     link.update_quality()
     _update_vote_user_reliabilities(link)
+
+
+# Use simple link constructor to create new links
+cfg_pool(SLink)
