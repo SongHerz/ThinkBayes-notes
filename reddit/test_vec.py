@@ -14,13 +14,13 @@ from .comm import VoteDir
 # def _reliability_to_reversibility(reliability: float) -> float:
 #     """Calculate vote reversibility given reliability"""
 #     assert 0.0 <= reliability <= 1.0
-# 
+#
 #     # Linear Map reliability -> revsersibility
 #     # 1 -> 0
 #     # 0 -> 0.5
 #     # ==> reversibility = (-0.5) * reliability + 0.5
 #     return (-0.5) *  reliability + 0.5
-# 
+#
 # def _reversibility_to_reliability(reversibility: float) -> float:
 #     """Reverse function of _reliability_to_reversibility"""
 #     return (-2) * reversibility + 1
@@ -80,17 +80,17 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     """
     rand = Random(100)
 
-    USER_COUNT = 8
-    LINK_COUNT = 15
-    GOOD_LINK_RATIO = 0.8
-    GOOD_LINK_COUNT = math.floor(LINK_COUNT * GOOD_LINK_RATIO)
-    BAD_LINK_COUNT = LINK_COUNT - GOOD_LINK_COUNT
+    USER_COUNT = 8        # pylint: disable=C0103
+    LINK_COUNT = 15       # pylint: disable=C0103
+    GOOD_LINK_RATIO = 0.8 # pylint: disable=C0103
+    GOOD_LINK_COUNT = math.floor(LINK_COUNT * GOOD_LINK_RATIO) # pylint: disable=C0103
+    BAD_LINK_COUNT = LINK_COUNT - GOOD_LINK_COUNT              # pylint: disable=C0103
     user_ids = list(range(USER_COUNT))
 
-    GOOD_LINK_START = 0
-    GOOD_LINK_END_INC = GOOD_LINK_START + GOOD_LINK_COUNT - 1
-    BAD_LINK_START = _get_decimal_next_order_of_magnitute(GOOD_LINK_END_INC)
-    BAD_LINK_END_INC = BAD_LINK_START + BAD_LINK_COUNT - 1
+    GOOD_LINK_START = 0   # pylint: disable=C0103
+    GOOD_LINK_END_INC = GOOD_LINK_START + GOOD_LINK_COUNT - 1                # pylint: disable=C0103
+    BAD_LINK_START = _get_decimal_next_order_of_magnitute(GOOD_LINK_END_INC) # pylint: disable=C0103
+    BAD_LINK_END_INC = BAD_LINK_START + BAD_LINK_COUNT - 1                   # pylint: disable=C0103
 
 
     # Predefined good / bad links
@@ -100,7 +100,8 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
 
     # Assign user reliability from 1.0 to 0.5
     uid_reli_map = {}
-    uid_reli_map.update(x for x in zip(user_ids, list(np.linspace(start=1.0, stop=0.5, num=len(user_ids), dtype=float))))
+    uid_reli_map.update(
+        x for x in zip(user_ids, np.linspace(start=1.0, stop=0.5, num=len(user_ids), dtype=float)))
 
     ########################
     # Generate test vector #
@@ -134,10 +135,10 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
     sim_uid_vote_unintended_cnt_map = Counter()
     for (uid, link_id), vote_dir in vote_map.items():
         if link_id in good_link_ids:
-            is_intended_vote_dir = (vote_dir == VoteDir.UP)
+            is_intended_vote_dir = (vote_dir == VoteDir.UP)   # pylint: disable=C0325
         else:
             assert link_id in bad_link_ids
-            is_intended_vote_dir = (vote_dir == VoteDir.DOWN)
+            is_intended_vote_dir = (vote_dir == VoteDir.DOWN) # pylint: disable=C0325
 
         if is_intended_vote_dir:
             sim_uid_vote_intended_cnt_map[uid] += 1
