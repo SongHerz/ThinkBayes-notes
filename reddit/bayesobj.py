@@ -90,7 +90,8 @@ class BLink(Link):
         """Quality of this link"""
         return self._l_quality.Mean()
 
-    def quality2(self) -> float | None:
+    @property
+    def max_likelihood(self) -> float:
         return self._l_quality.MaximumLikelihood()
 
     def pre_commit_update_quality(self):
