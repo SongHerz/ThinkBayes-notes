@@ -73,13 +73,15 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
         link_is_good = True
     elif up_vote_cnt == dn_vote_cnt:
         # Not sure this is a good link or a bad link
-        link_is_good = False
+        link_is_good = None
     else:
         assert up_vote_cnt < dn_vote_cnt
         # This is a bad link
         link_is_good = False
 
-    if link_is_good:
+    if link_is_good is None:
+        return None
+    elif link_is_good:
         if user_vote.dir_ == VoteDir.UP:
             return True
         else:
@@ -87,7 +89,7 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
             return False
     else:
         if user_vote.dir_ == VoteDir.DOWN:
-            return None
+            return True
         else:
             assert user_vote.dir_ == VoteDir.UP
             return False
