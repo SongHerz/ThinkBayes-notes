@@ -73,9 +73,10 @@ def _get_decimal_next_order_of_magnitute(v: int) -> int:
     return 10 ** next_order
 
 
-def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
+def gen_test_vec(shuffle: bool) -> list[tuple[int, int, VoteDir]]:
     """
     Generate test vector.
+    :param shuffle: shuffle test vector before returning.
     :return: list of test vectors in [(user id, link id, vote dir)]
     """
     rand = Random(100)
@@ -170,4 +171,8 @@ def gen_test_vec() -> list[tuple[int, int, VoteDir]]:
 
     print()
 
-    return [(user_id, link_id, vote_dir) for (user_id, link_id), vote_dir in vote_map.items()]
+    vec = [(user_id, link_id, vote_dir) for (user_id, link_id), vote_dir in vote_map.items()]
+    if shuffle:
+        rand.shuffle(vec)
+
+    return vec

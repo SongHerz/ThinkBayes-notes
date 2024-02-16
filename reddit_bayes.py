@@ -7,9 +7,13 @@ import thinkplot
 
 def test_bayes():
     """Run bayes model with test vector"""
-    vec = gen_test_vec()
-    for user_id, link_id, vote_dir in vec:
+    vec = gen_test_vec(False)
+    for i, (user_id, link_id, vote_dir) in enumerate(vec):
         vote(user_id=user_id, link_id=link_id, dir_=vote_dir)
+        # print()
+        # print(f'# LOOP: {i}')
+        # print(f'test vec: user id: {user_id}, link id: {link_id}, vote dir: {vote_dir}')
+        # get_pool().print_summary()
 
     print()
     print('#####################')
