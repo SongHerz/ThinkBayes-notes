@@ -10,7 +10,8 @@ from .comm import User, Link, Vote, VoteDir
 
 class UserPool:
     """All users"""
-    def __init__(self):
+    def __init__(self, constr: Callable[[int], User]):
+        self._constr = constr
         # {id: User}
         self._users = {}
 
@@ -24,7 +25,7 @@ class UserPool:
         if id_ in self._users:
             return self._users[id_]
         else:
-            user = User(id_)
+            user = self._constr(id_)
             self._users[user.id_] = user
             return user
 
@@ -53,8 +54,8 @@ class LinkPool:
 
 class ResourcePool:
     """Encapsulate all resource retrieval"""
-    def __init__(self, link_constr: Callable[[int], Link]):
-        self._user_pool = UserPool()
+    def __init__(self, user_constr: Callable[[int], User], link_constr: Callable[[int], Link]):
+        self._user_pool = UserPool(user_constr)
         self._link_pool = LinkPool(link_constr)
 
     def get_user(self, id_: int) -> User:
@@ -120,22 +121,25 @@ class ResourcePool:
         self._print_link_summary()
 
 
+_g_user_constr = None
 _g_link_constr = None
 _g_pool = None
 
 
-def cfg_pool(link_constr: Callable[[int], Link]):
+def cfg_pool(user_constr: Callable[[int], User], link_constr: Callable[[int], Link]):
     """Config resource pool"""
+    global _g_user_constr
     global _g_link_constr
-    assert _g_link_constr is None, 'Only allow config pool once'
+    assert (_g_user_constr is None) and (_g_link_constr is None), 'Only allow config pool once'
+    _g_user_constr = user_constr
     _g_link_constr = link_constr
 
 
 def get_pool() -> ResourcePool:
     """Singleton ResourcePool"""
     global _g_pool
-    assert _g_link_constr is not None, 'cfg_pool must be called before calling get_pool'
+    assert (_g_user_constr is not None) and (_g_link_constr is not None), 'cfg_pool must be called before calling get_pool'
     if _g_pool is None:
-        _g_pool = ResourcePool(_g_link_constr)
+        _g_pool = ResourcePool(_g_user_constr, _g_link_constr)
 
     return _g_pool

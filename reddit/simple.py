@@ -10,6 +10,9 @@ from .comm import VoteDir, Vote, Link, User
 from .pool import cfg_pool, get_pool
 
 
+class SUser(User):
+    pass
+
 class SLink(Link):
     """Simple Link with simple quality"""
     def __init__(self, id_: int):
@@ -139,4 +142,4 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
 
 
 # Use simple link constructor to create new links
-cfg_pool(SLink)
+cfg_pool(SUser, SLink)

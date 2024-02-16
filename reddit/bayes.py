@@ -2,12 +2,17 @@
 
 """
 Reddit problem bayes model.
+Only link are modeled by bayes.
 """
 
 from thinkbayes import Suite
 
 from .comm import Vote, VoteDir, Link, User
 from .pool import cfg_pool, get_pool
+
+
+class SUser(User):
+    pass
 
 
 class LinkQuality(Suite):
@@ -232,4 +237,4 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
 
 
 # Use simple link constructor to create new links
-cfg_pool(BLink)
+cfg_pool(SUser, BLink)
