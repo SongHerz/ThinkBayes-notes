@@ -91,7 +91,6 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
     link.add_vote(new_vote)
     link.commit_vote()
 
-    # user.update_reliability(vote_, lq_b4_new_vote)
     user.update_reliability(new_vote, lq_b4_new_vote)
 
 

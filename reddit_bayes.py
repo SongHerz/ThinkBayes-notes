@@ -7,7 +7,7 @@ import thinkplot
 
 def test_bayes():
     """Run bayes model with test vector"""
-    vec = gen_test_vec(True)
+    vec = gen_test_vec(False)
     for i, (user_id, link_id, vote_dir) in enumerate(vec):
         vote(user_id=user_id, link_id=link_id, dir_=vote_dir)
         # print()

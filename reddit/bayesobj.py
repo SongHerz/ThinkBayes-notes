@@ -4,6 +4,7 @@
 Reddit problem user / link bayes model.
 """
 
+import numpy as np
 from thinkbayes import Suite
 
 from .comm import Vote, VoteDir, Link, User
@@ -14,18 +15,18 @@ class UserReliability(Suite):
     User reliability modeled by Bayes model.
     """
     def __init__(self, name: str):
-        super().__init__(range(1, 101), name=name)
+        super().__init__(np.linspace(start=1.0 / 100, stop=1.0, num=100, dtype=float), name=name)
 
     def Likelihood(self, data: tuple[Vote, float], hypo: int) -> float:
         x = hypo
-        vote_reli_like = x / 100
-        vote_unreli_like = 1 - x / 100
+        vote_reli_like = x
+        vote_unreli_like = 1 - x
         # When a vote is unjudgable, give same likelihood to all hypos
         vote_unjudge_like = 1.0
 
         # vote, and link quality (this vote excluded)
         vote, lq = data
-        delta = 0.001
+        delta = 0.0001
 
         link_is_good = None
         if lq > 0.5 + delta:
@@ -69,7 +70,7 @@ class LinkQuality(Suite):
     Link quality modeled by Bayes model.
     """
     def __init__(self, name: str):
-        super().__init__(range(1, 101), name=name)
+        super().__init__(np.linspace(start=1 / 100, stop=1, num=100, dtype=float), name=name)
 
     def _likelihood(self, vote_dir: VoteDir, reversibility: float, hypo: int) -> float:
         """
@@ -83,9 +84,9 @@ class LinkQuality(Suite):
         - hypo D -> measured D: denote d2d
         - hypo D -> measured U: denote d2u
 
-        Given hypothesis upvote probability is x%
-        hypo U likelihood: x / 100
-        hypo D likelihood: 1 - hypo U likelihood = 1 - x / 100
+        Given hypothesis upvote probability is x
+        hypo U likelihood: x
+        hypo D likelihood: 1 - hypo U likelihood = 1 - x
 
         measured U likelihood = u2u likelihood + d2u likelihood
         measured D likelihood = d2d likelihood + u2d likelihood
@@ -100,21 +101,23 @@ class LinkQuality(Suite):
         measured U likelihood
         = u2u likelihood + d2u likelihood
         = hypo U likelihood * (1 - reversibility) + hypo D likelihood * reversibility
-        = (x / 100) * (1 - reversibility) + (1 - x / 100) * reversibility
+        = x * (1 - reversibility) + (1 - x) * reversibility
 
         measured D likelihood
         = d2d likelihood + u2d likelihood
         = hypo D likelihood * (1 - reversibility) + hypo U likelihood * reversibility
-        = (1 - x / 100) * (1 - reversibility) + (x / 100) * reversibility
+        = (1 - x) * (1 - reversibility) + x * reversibility
 
         And it is easy to verify that, when reversibility is zero.
-        measured U likelihood = x / 100 = hypo U likelihood
-        measured D likelihood = 1 - x / 100 = hypo D likelihood
+        measured U likelihood = x = hypo U likelihood
+        measured D likelihood = 1 - x = hypo D likelihood
         """
+        assert 0 <= reversibility <= 1.0
+
         x = hypo
 
-        hypo_U_like = x / 100
-        hypo_D_like = 1 - x / 100
+        hypo_U_like = x
+        hypo_D_like = 1 - x
 
         if vote_dir == VoteDir.UP:
             return hypo_U_like * (1 - reversibility) + hypo_D_like * reversibility
