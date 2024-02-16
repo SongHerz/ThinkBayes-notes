@@ -48,7 +48,7 @@ class SLink(Link):
         self._quality = self._do_update_quality(self._user_votes.values())
 
 
-def _is_user_vote_reliable(u: User, link: SLink) -> bool | None:
+def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
     """
     :return: True, the user vote for the given link is reliable
              False, the user vote for the given link is unreliable
