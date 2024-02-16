@@ -11,7 +11,21 @@ from .pool import cfg_pool, get_pool
 
 
 class SUser(User):
-    pass
+    """User with simple reliability model"""
+    def __init__(self, id_: int):
+        """A simple user"""
+        super().__init__(id_)
+        self._reliability = 0.5
+
+    @property
+    def reliability(self):
+        return self._reliability
+
+    @reliability.setter
+    def reliability(self, v: float):
+        assert 0 <= v <= 1.0
+        self._reliability = v
+
 
 class SLink(Link):
     """Simple Link with simple quality"""
@@ -98,7 +112,8 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
             return False
 
 
-def _update_user_reliability(u: User):
+def _update_suser_reliability(u: SUser):
+    """Update reliability of a simple user"""
     link_it = get_pool().links
 
     reli_vote_cnt = 0
@@ -119,16 +134,16 @@ def _update_user_reliability(u: User):
     u.reliability = reli_vote_cnt / tot_vote_cnt
 
 
-def _update_vote_user_reliabilities(link: SLink):
-    """Update users who has vote for given link"""
-    # Users to update {user id: User}
+def _update_vote_suser_reliabilities(link: SLink):
+    """Update simple users who has vote for given link"""
+    # Users to update {user id: SUser}
     users = {}
     for v in link.votes:
         if v.user.id_ not in users:
             users[v.user.id_] = v.user
 
     for u in users.values():
-        _update_user_reliability(u)
+        _update_suser_reliability(u)
 
 
 def vote(user_id: int, link_id: int, dir_: VoteDir):
@@ -138,7 +153,7 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
     vote_ = Vote(user, dir_)
     link.add_vote(vote_)
     link.commit_vote()
-    _update_vote_user_reliabilities(link)
+    _update_vote_suser_reliabilities(link)
 
 
 # Use simple link constructor to create new links

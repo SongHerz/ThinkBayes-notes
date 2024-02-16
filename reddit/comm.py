@@ -9,28 +9,22 @@ from enum import Enum, auto
 from abc import ABC, abstractmethod
 
 
-class User:
+class User(ABC):
     """Represent an user"""
     def __init__(self, id_: int):
         """Represent a redditor (a user)"""
         self.id_ = id_
-        # Reliability 0 ~ 1
-        self.reliability = 0.5
 
     @property
+    @abstractmethod
     def reliability(self):
-        """Return reliability value"""
-        return self._reliability
-
-    @reliability.setter
-    def reliability(self, v: float):
-        assert 0 <= v <= 1.0
-        self._reliability = v
+        """Return reliability value (0 ~ 1)"""
+        raise NotImplementedError('Child class must implement this')
 
     @property
     def reversibility(self):
         """Reversibility"""
-        return 1.0 - self._reliability
+        return 1.0 - self.reliability
 
 
 class VoteDir(Enum):
