@@ -9,6 +9,61 @@ from thinkbayes import Suite
 from .comm import Vote, VoteDir, Link, User
 
 
+class UserReliability(Suite):
+    """
+    User reliability modeled by Bayes model.
+    """
+    def __init__(self, name: str):
+        super().__init__(range(1, 101), name=name)
+
+    def Likelihood(self, data: tuple[Vote, float], hypo: int) -> float:
+        x = hypo
+        vote_reli_like = x / 100
+        vote_unreli_like = 1 - x / 100
+        # When a vote is unjudgable, give same likelihood to all hypos
+        vote_unjudge_like = 1.0
+
+        # vote, and link quality (this vote excluded)
+        vote, lq = data
+        delta = 0.001
+
+        link_is_good = None
+        if lq > 0.5 + delta:
+            # this link is good
+            link_is_good = True
+        elif 0.5 - delta <= lq <= 0.5 + delta:
+            # Not sure if this link is good or not
+            link_is_good = None
+        else:
+            assert lq < 0.5 - delta
+            link_is_good = False
+
+        if link_is_good is None:
+            return vote_unjudge_like
+
+        expected_vote_dir = VoteDir.UP if link_is_good else VoteDir.DOWN
+        return vote_reli_like if expected_vote_dir == vote.dir_ else vote_unreli_like
+
+
+class BUser(User):
+    """User with bayes model"""
+    def __init__(self, id_: int):
+        super().__init__(id_)
+        self._reliability = UserReliability(name=f'user_{id_}')
+
+    @property
+    def reliability(self) -> float:
+        return self._reliability.Mean()
+
+    def update_reliability(self, new_vote: Vote, link_quality: float):
+        """Update reliability with user vote and the voted link"""
+        self._reliability.Update((new_vote, link_quality))
+
+    @property
+    def max_likelihood(self) -> float:
+        return self._reliability.MaximumLikelihood()
+
+
 class LinkQuality(Suite):
     """
     Link quality modeled by Bayes model.

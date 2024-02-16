@@ -67,6 +67,11 @@ class ResourcePool:
         return self._link_pool.get(id_)
 
     @property
+    def users(self) -> Iterator[User]:
+        """Return an iterator on all users"""
+        return self._user_pool.users
+
+    @property
     def links(self) -> Iterator[Link]:
         """Return an iterator on all links"""
         return self._link_pool.links
