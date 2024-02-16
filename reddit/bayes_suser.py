@@ -21,7 +21,7 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
         return None
 
     lq = link.quality
-    delta = 0.001
+    delta = 0.0001
     link_is_good = None
 
     if lq > 0.5 + delta:
