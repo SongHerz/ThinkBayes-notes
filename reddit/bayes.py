@@ -102,6 +102,53 @@ class BLink(Link):
         pass
 
 
+# def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
+#     """
+#     :return: True, the user vote for the given link is reliable
+#              False, the user vote for the given link is unreliable
+#              None, the user has no vote for the given link, or it cannot determine user vote is reliable or not.
+#     """
+#     user_vote = link.get_vote(u)
+#     if user_vote is None:
+#         return None
+#
+#     up_vote_cnt = 0
+#     dn_vote_cnt = 0
+#     for v in link.votes:
+#         if v.dir_ == VoteDir.UP:
+#             up_vote_cnt += 1
+#         else:
+#             assert v.dir_ == VoteDir.DOWN
+#             dn_vote_cnt += 1
+#
+#     link_is_good = None
+#     if up_vote_cnt > dn_vote_cnt:
+#         # This is a good link
+#         link_is_good = True
+#     elif up_vote_cnt == dn_vote_cnt:
+#         # Not sure this is a good link or a bad link
+#         link_is_good = None
+#     else:
+#         assert up_vote_cnt < dn_vote_cnt
+#         # This is a bad link
+#         link_is_good = False
+#
+#     if link_is_good is None:
+#         return None
+#     elif link_is_good:
+#         if user_vote.dir_ == VoteDir.UP:
+#             return True
+#         else:
+#             assert user_vote.dir_ == VoteDir.DOWN
+#             return False
+#     else:
+#         if user_vote.dir_ == VoteDir.DOWN:
+#             return True
+#         else:
+#             assert user_vote.dir_ == VoteDir.UP
+#             return False
+
+
 def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
     """
     :return: True, the user vote for the given link is reliable
@@ -112,28 +159,22 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
     if user_vote is None:
         return None
 
-    up_vote_cnt = 0
-    dn_vote_cnt = 0
-    for v in link.votes:
-        if v.dir_ == VoteDir.UP:
-            up_vote_cnt += 1
-        else:
-            assert v.dir_ == VoteDir.DOWN
-            dn_vote_cnt += 1
-
+    lq = link.quality
+    delta = 0.001
     link_is_good = None
-    if up_vote_cnt > dn_vote_cnt:
-        # This is a good link
+
+    if lq > 0.5 + delta:
         link_is_good = True
-    elif up_vote_cnt == dn_vote_cnt:
-        # Not sure this is a good link or a bad link
-        link_is_good = False
+    elif 0.5 - delta <= lq <= 0.5 + delta:
+        # When the link quality is confusing, consider the link good.
+        link_is_good = None
     else:
-        assert up_vote_cnt < dn_vote_cnt
-        # This is a bad link
+        assert lq < 0.5 - delta
         link_is_good = False
 
-    if link_is_good:
+    if link_is_good is None:
+        return None
+    elif link_is_good:
         if user_vote.dir_ == VoteDir.UP:
             return True
         else:
@@ -141,7 +182,7 @@ def _is_user_vote_reliable(u: User, link: Link) -> bool | None:
             return False
     else:
         if user_vote.dir_ == VoteDir.DOWN:
-            return None
+            return True
         else:
             assert user_vote.dir_ == VoteDir.UP
             return False
