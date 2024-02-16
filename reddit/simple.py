@@ -4,6 +4,8 @@
 Reddit problem simple model.
 """
 
+from typing import Iterator
+
 from .comm import VoteDir, Vote, Link, User
 from .pool import cfg_pool, get_pool
 
@@ -19,11 +21,12 @@ class SLink(Link):
         """Quality of this link"""
         return self._quality
 
-    def update_quality(self):
+    @staticmethod
+    def _do_update_quality(vote_it: Iterator[Vote]) -> float | None:
         """Update quality of this link according to all votes"""
         up_votes = 0
         down_votes = 0
-        for vote in self.user_votes.values():
+        for vote in vote_it:
             if vote.dir_ == VoteDir.UP:
                 up_votes += 1
             else:
@@ -34,9 +37,15 @@ class SLink(Link):
         assert tot_votes >= 0
         if tot_votes == 0:
             # unable to determine the quality
-            self._quality = None
+            return None
         else:
-            self._quality = up_votes / tot_votes
+            return up_votes / tot_votes
+
+    def pre_commit_update_quality(self):
+        pass
+
+    def post_commit_update_quality(self):
+        self._quality = self._do_update_quality(self._user_votes.values())
 
 
 def _is_user_vote_reliable(u: User, link: SLink) -> bool | None:
@@ -123,7 +132,7 @@ def vote(user_id: int, link_id: int, dir_: VoteDir):
     link = get_pool().get_link(link_id)
     vote_ = Vote(user, dir_)
     link.add_vote(vote_)
-    link.update_quality()
+    link.commit_vote()
     _update_vote_user_reliabilities(link)
 
 

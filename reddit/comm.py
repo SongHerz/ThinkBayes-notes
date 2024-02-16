@@ -6,7 +6,7 @@ Common classes for reddit problem.
 
 from typing import Iterator
 from enum import Enum, auto
-from abc import ABC, abstractmethod, abstractproperty
+from abc import ABC, abstractmethod
 
 
 class User:
@@ -27,6 +27,11 @@ class User:
         assert 0 <= v <= 1.0
         self._reliability = v
 
+    @property
+    def reversibility(self):
+        """Reversibility"""
+        return 1.0 - self._reliability
+
 
 class VoteDir(Enum):
     """Vote directions"""
@@ -45,29 +50,52 @@ class Link(ABC):
     """Represent a link"""
     def __init__(self, id_: int):
         self.id_ = id_
+        # [Vote]
+        self._staged_votes = []
         # {user id: Vote}
-        self.user_votes = {}
-        self._quality = None
+        self._user_votes = {}
 
     def add_vote(self, vote: Vote):
         """Add a vote to this link"""
-        self.user_votes[vote.user.id_] = vote
+        self._staged_votes.append(vote)
+
+    @abstractmethod
+    def pre_commit_update_quality(self):
+        """Method used to update link quality before committing votes.
+        This method is called inside commit_vote.
+        """
+        raise NotImplementedError('Child class must implement this')
+
+    @abstractmethod
+    def post_commit_update_quality(self):
+        """Method used to update link quality after committing votes.
+        This method is called inside commit_vote.
+        """
+        raise NotImplementedError('Child class must implement this')
+
+    def commit_vote(self):
+        """Commit staged votes"""
+        self.pre_commit_update_quality()
+
+        for v in self._staged_votes:
+            self._user_votes[v.user.id_] = v
+
+        self._staged_votes.clear()
+
+        self.post_commit_update_quality()
 
     @property
     def votes(self) -> Iterator[Vote]:
         """Return an iterator on votes of this link"""
-        return self.user_votes.values()
+        return self._user_votes.values()
 
     def get_vote(self, u: User) -> Vote | None:
         """Return a vote by given user"""
-        return self.user_votes.get(u.id_, None)
+        return self._user_votes.get(u.id_, None)
 
-    @abstractproperty
+    @property
+    @abstractmethod
     def quality(self) -> float | None:
         """Quality of this link"""
         raise NotImplementedError('Child class must implement this')
 
-    @abstractmethod
-    def update_quality(self):
-        """Update quality of this link"""
-        raise NotImplementedError('Child class must implement this')
