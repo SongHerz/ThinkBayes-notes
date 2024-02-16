@@ -14,8 +14,8 @@ class LinkQuality(Suite):
     """
     Link quality modeled by Bayes model.
     """
-    def __init__(self):
-        super().__init__(range(1, 101))
+    def __init__(self, name: str):
+        super().__init__(range(1, 101), name=name)
 
     def _likelihood(self, vote_dir: VoteDir, reversibility: float, hypo: int) -> float:
         """
@@ -83,7 +83,8 @@ class BLink(Link):
     """Link with bayes model"""
     def __init__(self, id_: int):
         super().__init__(id_)
-        self._l_quality = LinkQuality()
+        # Give pmf a name for visualization
+        self._l_quality = LinkQuality(name=f'link_{id_}')
 
     @property
     def quality(self) -> float | None:
